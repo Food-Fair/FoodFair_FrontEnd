@@ -43,7 +43,7 @@ const AdminDashboard = () => {
             <SidebarHeader className="p-4 border-b bg-white">
               <h2 className="text-xl font-bold">Admin Dashboard</h2>
             </SidebarHeader>
-            <SidebarContent className="h-[calc(100vh-5rem)]">
+            <SidebarContent className="">
               <nav className="p-4">
                 <ul className="space-y-2">
                   <li>

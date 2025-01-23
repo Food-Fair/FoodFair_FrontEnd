@@ -14,6 +14,23 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
 
+
+  const checkAndRedirect = () => {
+    const access_token = localStorage.getItem('access_token');
+    
+    if (!access_token) {
+      return '/login';
+    }
+  
+    try {
+      const decodedToken = JSON.parse(atob(access_token.split(".")[1]));
+      return decodedToken.authorities === "ROLE_OWNER" ? '/admin' : '/';
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return '/login';
+    }
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -23,23 +40,20 @@ const LoginPage = () => {
       });
   
       if (response.status === 200) {
-        const { access_token } = response.data;
-  
         // Store the token in localStorage
-        localStorage.setItem("access_token", access_token);
-  
-        // Decode JWT token safely
-        const decodedToken = JSON.parse(atob(access_token.split(".")[1])); 
-        console.log("Decoded Token:", decodedToken);
-  
+        localStorage.setItem('access_token', response.data.access_token);
+        
+        // Get the redirect path
+        const redirectPath = checkAndRedirect();
+        
+        // Navigate to the appropriate path
+        navigate(redirectPath);
   
         setSuccess('Login successful!');
         setError(null); // Clear error message
         setEmail('');
         setPassword('');
   
-        // Navigate to the dashboard
-        navigate("/");
       } else {
         throw new Error('Unexpected response status');
       }
