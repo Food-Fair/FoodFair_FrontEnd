@@ -10,15 +10,20 @@ const OrderPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
+  const OrderStatus = {
+    PENDING: 'PENDING',
+    ACCEPTED: 'ACCEPTED',
+    REJECTED: 'REJECTED',
+    ON_PROGRESS: 'ON_PROGRESS',
+    DELIVERED: 'DELIVERED'
+  };
+
 
   const [selectedStatus, setSelectedStatus] = useState("PENDING");
 
   useEffect(() => {
     fetchOrders();
   }, [selectedStatus]);
-  useEffect(() => {
-    fetchOrders();
-  }, []);
 
   const showNotification = (message, type) => {
     setNotification({ show: true, message, type });
@@ -38,6 +43,8 @@ const OrderPage = () => {
         ...prev,
         [userId]: customerData
       }));
+
+      console.log('received customer data', customerData); // Debug log
     } catch (error) {
       console.error('Error fetching user details:', error);
     }
@@ -133,13 +140,14 @@ const OrderPage = () => {
       setLoading(false);
       return;
     }
-
+  
     try {
+      setLoading(true);
       const response = await axios.get(
         'http://localhost:8080/admin/orders-by-status',
         {
           params: {
-            status: 'PENDING',
+            status: selectedStatus,
             sortByDateTime: true
           },
           headers: {
@@ -149,7 +157,7 @@ const OrderPage = () => {
           withCredentials: true
         }
       );
-
+  
       setOrders(response.data);
       
       // Fetch user details for each order
@@ -161,7 +169,7 @@ const OrderPage = () => {
           handleFoodDetails(item.foodId);
         });
       });
-
+  
     } catch (err) {
       setError(err.response?.data || 'An error occurred while fetching orders');
     } finally {
@@ -173,13 +181,40 @@ const OrderPage = () => {
     return new Date(dateTimeStr).toLocaleString();
   };
 
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
+  const StatusFilter = ({ selectedStatus, onStatusChange }) => (
+    <div className="status-filter-container mb-8">
+      <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-md border border-gray-200">
+        <div className="flex items-center gap-4">
+          <label className="text-gray-700 font-semibold text-lg">Order Status:</label>
+          <select
+            value={selectedStatus}
+            onChange={(e) => onStatusChange(e.target.value)}
+            className="min-w-[200px] px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm 
+                      text-gray-700 font-medium
+                      focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+                      transition-colors duration-200"
+          >
+            {Object.entries(OrderStatus).map(([key, value]) => (
+              <option key={key} value={value} className="py-2">
+                {value.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <span className={`px-3 py-1 rounded-full text-sm font-medium
+            ${selectedStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+              selectedStatus === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
+              selectedStatus === 'REJECTED' ? 'bg-red-100 text-red-800' :
+              selectedStatus === 'ON_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+              'bg-green-100 text-green-800'}`}>
+            {selectedStatus.replace('_', ' ')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="orders-container">
@@ -218,16 +253,24 @@ const OrderPage = () => {
       )}
 
 <h2 className="text-2xl font-bold mb-6">Orders Management</h2>
+{/* Add Status Filter */}
+<StatusFilter 
+      selectedStatus={selectedStatus} 
+      onStatusChange={(status) => setSelectedStatus(status)} 
+    />
       {orders.length === 0 ? (
-        <p className="text-gray-500 text-center">No orders found</p>
-      ) : (
+      <p className="text-gray-500 text-center">No orders found for status: {selectedStatus}</p>
+    ) : (
         <div className="orders-list">
           {orders.map((order, index) => (
             <div key={order.id} className="order-card">
               <div className="order-header">
                 <div className="order-title">
-                  <h3 className="text-xl font-bold">Order #{index + 1}</h3>
-                  <small className="text-gray-500">ID: {order.id}</small>
+                <div className="flex  gap-4">
+  <h3 className="text-xl font-bold">Order_id</h3>
+  <small className="text-gray-500">ID: {order.id}</small>
+</div>
+
                   
                   {/* Add user details section */}
                   {userDetails[order.userId] && (
@@ -283,7 +326,6 @@ const OrderPage = () => {
         </div>
                     <div className="food-details">
                       <p><strong>Item:</strong> {foodDetails[item.foodId]?.name || 'Loading...'}</p>
-                      <p><strong>Description:</strong> {foodDetails[item.foodId]?.description || 'Loading...'}</p>
                       <p><strong>Flavor:</strong> {item.flavorName}</p>
                       <p><strong>Quantity:</strong> {item.quantity}</p>
                       <p><strong>Weight:</strong> {item.weight} pound</p>
@@ -310,6 +352,37 @@ const OrderPage = () => {
 };
 
 const styles = `
+
+  /* Updated styles */
+.status-filter-container {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f9fafb;
+  padding: 1rem 0;
+}
+
+.status-filter-container select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+}
+
+.status-filter-container select:hover {
+  border-color: #f97316;
+}
+
+.status-filter-container select option {
+  padding: 0.5rem;
+}
+
+/* Status badge styles */
+.status-badge {
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
   .orders-container {
     padding: 20px;
     max-width: 1200px;

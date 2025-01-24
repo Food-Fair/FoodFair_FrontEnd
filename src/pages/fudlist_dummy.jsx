@@ -82,120 +82,6 @@ const ImageModal = ({ images, isOpen, onClose }) => {
   );
 };
 
-const FilterSection = ({ filters, onFilterChange, onSubmit }) => (
-  <form onSubmit={onSubmit} className=" top-0 z-10 bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-md mb-8">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Search Foods</label>
-        <input
-          type="text"
-          name="name"
-          value={filters.name}
-          onChange={onFilterChange}
-          placeholder="Search by name..."
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-        <input
-          type="text"
-          name="category"
-          value={filters.category}
-          onChange={onFilterChange}
-          placeholder="Filter by category..."
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Sub Category</label>
-        <input
-          type="text"
-          name="subCategory"
-          value={filters.subCategory}
-          onChange={onFilterChange}
-          placeholder="Filter by sub-category..."
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-        />
-      </div>
-    </div>
-    <div className="mt-6 flex justify-end">
-      <button
-        type="submit"
-        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg
-                 transition-colors duration-200"
-      >
-        Search Foods
-      </button>
-    </div>
-  </form>
-);
-
-
-const FoodCard = ({ food, onClick }) => (
-  <div 
-    onClick={onClick}
-    className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200
-               overflow-hidden cursor-pointer border border-gray-100"
-  >
-    {food.images && food.images.length > 0 && (
-      <div className="relative aspect-w-16 aspect-h-9">
-        <FoodImage imagePath={food.images[0]} />
-        {food.images.length > 1 && (
-          <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
-            +{food.images.length - 1} more
-          </div>
-        )}
-      </div>
-    )}
-    
-    <div className="p-4">
-      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-500 transition-colors">
-        {food.name}
-      </h3>
-      <p className="mt-1 text-sm text-gray-600 line-clamp-2">{food.description}</p>
-      
-      <div className="mt-3 flex flex-wrap gap-2">
-        <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-          {food.category}
-        </span>
-        {food.subCategory && (
-          <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-            {food.subCategory}
-          </span>
-        )}
-      </div>
-
-      {food.flavor && food.flavor.length > 0 && (
-        <div className="mt-3">
-          <h4 className="text-xs font-semibold text-gray-700 mb-1">Available Flavors:</h4>
-          <div className="flex flex-wrap gap-2">
-            {food.flavor.slice(0, 2).map((flav, index) => (
-              <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md">
-                {flav.flavorName}
-              </span>
-            ))}
-            {food.flavor.length > 2 && (
-              <span className="px-2 py-1 text-xs text-gray-500">
-                +{food.flavor.length - 2} more
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-        <div className="text-sm text-gray-600">
-          <span className="font-medium">{food.weight}g</span>
-        </div>
-        <button className="px-3 py-1 text-sm text-orange-500 hover:text-orange-600 font-medium">
-          View Details →
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
 const FoodDetailModal = ({ isOpen, onClose, foodId }) => {
   const [food, setFood] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -475,43 +361,172 @@ const FoodList = () => {
     fetchFoods();
   }, []);
 
-  return  (
-    <div className="max-container mx-auto px-4 py-8">
-      <FilterSection 
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onSubmit={handleSubmit}
-      />
-
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-8">
-          <p className="text-red-700">{error}</p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {foods.map((food) => (
-              <FoodCard
-                key={food.foodId}
-                food={food}
-                onClick={() => handleFoodClick(food.foodId)}
-              />
-            ))}
+  return (
+    <div className="container  p-4 mx-auto">
+      {/* Filter Form */}
+      <form onSubmit={handleSubmit} className="mb-6 bg-white p-4 rounded shadow">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={filters.name}
+              onChange={handleFilterChange}
+              placeholder="Search by name"
+      className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 
+        placeholder-gray-400 shadow-sm 
+        focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]
+        text-sm"
+            />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Category</label>
+            <input
+              type="text"
+              name="category"
+              value={filters.category}
+              onChange={handleFilterChange}
+              placeholder="Search by Category"
+              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 
+                placeholder-gray-400 shadow-sm 
+                focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]
+                text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Sub Category</label>
+            <input
+              type="text"
+              name="subCategory"
+              value={filters.subCategory}
+              onChange={handleFilterChange}
+              placeholder="Search by SubCategory"
+              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 
+                placeholder-gray-400 shadow-sm 
+                focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]
+                text-sm"
+            />
+          </div>
+        </div>
+        <button
+          type="submit"
+          className="mt-4 bg-[#de7f45] text-white px-4 py-2 rounded hover:bg-[#eaad87]"
+        >
+          Search
+        </button>
+      </form>
 
-          {foods.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No foods found matching your criteria</p>
-            </div>
-          )}
-        </>
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+        </div>
       )}
 
-      <FoodDetailModal
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      {/* Foods Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {foods.map((food) => (
+          <div 
+            key={food.foodId} 
+            className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleFoodClick(food.foodId)}  // Updated this line
+          >
+            {/* Food Image */}
+            {food.images && food.images.length > 0 && (
+              <div className="relative">
+                <FoodImage imagePath={food.images[0]} />
+                {food.images.length > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-sm">
+                    +{food.images.length - 1}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Food Details */}
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-gray-900">{food.name}</h3>
+              <p className="text-sm text-gray-600 mt-1">{food.description}</p>
+              
+              {/* Category and SubCategory */}
+              <div className="mt-2">
+                <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2">
+                  {food.category}
+                </span>
+                {food.subCategory && (
+                  <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700">
+                    {food.subCategory}
+                  </span>
+                )}
+              </div>
+
+              {/* Flavors */}
+              {food.flavor && food.flavor.length > 0 && (
+                <div className="mt-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Flavors:</h4>
+                  <div className="mt-1">
+                    {food.flavor.map((flav, index) => (
+                      <span key={index} className="inline-block bg-orange-100 rounded-full px-3 py-1 text-sm font-semibold text-orange-700 mr-2 mb-2">
+                        {flav.flavorName} - ${flav.price}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Details */}
+              <div className="mt-3 text-sm text-gray-600">
+                <p>Weight: {food.weight}g</p>
+                <p>Delivery: {food.deliveryTimeInstruction}</p>
+              </div>
+
+              {/* Add-ons */}
+              {food.addOns && food.addOns.length > 0 && (
+                <div className="mt-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Available Add-ons:</h4>
+                  <div className="mt-1">
+                    {food.addOns.map((addon) => (
+                      <div key={addon.id} className="text-sm text-gray-600">
+                        {addon.name} - ${addon.price}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Created/Updated Dates */}
+              <div className="mt-3 text-xs text-gray-500">
+                <p>Created: {new Date(food.createdAt).toLocaleDateString()}</p>
+                <p>Updated: {new Date(food.updatedAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* No Results Message */}
+      {!loading && foods.length === 0 && (
+        <div className="text-center py-4 text-gray-600">
+          No foods found matching your criteria
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {/* <ImageModal
+        images={selectedImages}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      /> */}
+
+    <FoodDetailModal
         isOpen={selectedFoodId !== null}
         onClose={() => setSelectedFoodId(null)}
         foodId={selectedFoodId}
