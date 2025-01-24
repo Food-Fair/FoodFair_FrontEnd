@@ -1,0 +1,25 @@
+.location-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+
+  .location-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .location-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 5px;
+  }
+
+  .location-input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+  }

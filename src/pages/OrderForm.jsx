@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Car } from "lucide-react";
+import { Car, MapPin } from "lucide-react";
+
 
 const OrderForm = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -8,8 +9,31 @@ const OrderForm = () => {
   const [paymentMethod, setPaymentMethod] = useState("ON_CASH");
   const [deliveryTime, setDeliveryTime] = useState("");
   const [deliveryCharge, setDeliveryCharge] = useState(80.0);
+  
+  const [customerData, setCustomerData] = useState(null);
+
+  const fetchCustomerData = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const decodedToken = JSON.parse(atob(token.split(".")[1]));
+      const userId = decodedToken.userId;
+      console.log("userId", userId);
+
+      const response = await axios.get(`http://localhost:8080/api/customer/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setCustomerData(response.data);
+    } catch (err) {
+      console.error('Error fetching customer data:', err);
+    }
+  };
 
   useEffect(() => {
+
+    fetchCustomerData();
     // Retrieve the cart items from localStorage
     const cartData = localStorage.getItem("cart");
     console.log("Cart Data", cartData);
@@ -152,6 +176,16 @@ const handleOrderSubmit = async () => {
           <p className="text-gray-500">No items in cart.</p>
         )}
       </ul>
+      {/* Add Delivery Location Display */}
+      <div className="mb-4 p-3 bg-gray-50 rounded-md">
+        <div className="flex items-center gap-2">
+          <MapPin className="text-blue-600" size={20} />
+          <span className="font-medium">Delivery Location:</span>
+        </div>
+        <p className="mt-1 text-gray-700">
+          {customerData?.address || 'Loading...'}
+        </p>
+      </div>
       <div className="mb-4">
         <label className="block font-medium">Delivery Time:</label>
         <input

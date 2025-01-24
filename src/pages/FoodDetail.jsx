@@ -156,6 +156,7 @@ export default function FoodDetail() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Flavor:</label>
                 <Select
+                  defaultValue=""
                     value={flavor}
                     onValueChange={(selectedFlavor) => {
                       setFlavor(selectedFlavor);

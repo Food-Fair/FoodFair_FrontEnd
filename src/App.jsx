@@ -17,6 +17,7 @@ import AddFood from "./pages/AddFood";
 import OrderForm from "./pages/OrderForm";
 import RegisterPage from "./pages/RegisterPage";
 import OrdersPage from "./pages/OrderPage";
+import PP from "./pages/PP";
 
 const App = () => {
   return (
@@ -29,7 +30,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/category/:category_name" element={<CategoryDetail />} />
         <Route path="/detail/:id" element={<FoodDetail />} />
-        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/profile" element={<PP />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin" element={<AdminDashboard/>} />
         <Route path="/foodpage" element={<FoodPage/>} />

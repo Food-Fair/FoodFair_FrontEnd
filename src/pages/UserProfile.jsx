@@ -128,7 +128,7 @@ const [profileImage, setProfileImage] = useState(user.image);
           </div>
 
         {/* Orders Section */}
-        <div className="px-8 py-6 border-t border-gray-200">
+        {/* <div className="px-8 py-6 border-t border-gray-200">
           <h2 className="text-2xl font-bold mb-4">Recent Orders</h2>
           <div className="space-y-4">
             {user.orders.map((order) => (
@@ -139,7 +139,7 @@ const [profileImage, setProfileImage] = useState(user.image);
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
     </div>
   );

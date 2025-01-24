@@ -6,14 +6,15 @@ import { useNavigate } from "react-router-dom";
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState(''); 
-  const [roles, setroles] = useState('ROLE_CUSTOMER'); 
-  const [isRegister, setIsRegister] = useState(false); 
-  const [error, setError] = useState(null); // State for error messages
-  const [success, setSuccess] = useState(null); // State for success messages
+  const [name, setName] = useState('');
+  const [address, setAddress] = useState(''); // New state
+  const [phone, setPhone] = useState(''); // New state
+  const [roles, setroles] = useState('ROLE_CUSTOMER');
+  const [isRegister, setIsRegister] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const navigate = useNavigate();
-
 
   const checkAndRedirect = () => {
     const access_token = localStorage.getItem('access_token');
@@ -40,57 +41,85 @@ const LoginPage = () => {
       });
   
       if (response.status === 200) {
-        // Store the token in localStorage
         localStorage.setItem('access_token', response.data.access_token);
-        
-        // Get the redirect path
         const redirectPath = checkAndRedirect();
-        
-        // Navigate to the appropriate path
         navigate(redirectPath);
   
         setSuccess('Login successful!');
-        setError(null); // Clear error message
+        setError(null);
         setEmail('');
         setPassword('');
-  
-      } else {
-        throw new Error('Unexpected response status');
       }
     } catch (err) {
       console.error('Login failed:', err);
       setError(err.response?.data?.message || 'Login failed. Please try again.');
-      setSuccess(null); // Clear success message
+      setSuccess(null);
     }
   };
-  
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/api/register', {
+      // First, register the user
+      const registerResponse = await axios.post('http://localhost:8080/api/register', {
         email: email,
         password: password,
-        roles: [roles],  // Ensure it's passed as an array
+        roles: [roles],
       });
-  
-      if (response.status === 200 || response.status === 201) {
-        console.log('Registration successful:', response.data);
-        setSuccess('Registration successful! You can now log in.');
-        setError(null);  // Clear error message
-        setName('');      // Clear name field after successful registration
-        setEmail('');
-        setPassword('');
-        setroles('ROLE_CUSTOMER');  // Reset role to default
-        setIsRegister(false);  // Switch to login mode after successful registration
+
+      if (registerResponse.status === 200 || registerResponse.status === 201) {
+        // After successful registration, login to get the token
+        const loginResponse = await axios.post('http://localhost:8080/api/login', {
+          email: email,
+          password: password,
+        });
+
+        if (loginResponse.status === 200) {
+          const token = loginResponse.data.access_token;
+          localStorage.setItem('access_token', token);
+
+          // Create customer profile
+          try {
+            await axios.post(
+              'http://localhost:8080/customer/create',
+              {
+                name: name,
+                address: address,
+                phone: phone
+              },
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+
+            setSuccess('Registration and profile creation successful!');
+            setError(null);
+            setName('');
+            setEmail('');
+            setPassword('');
+            setAddress('');
+            setPhone('');
+            setroles('ROLE_CUSTOMER');
+            setIsRegister(false);
+
+            // Redirect after successful registration
+            const redirectPath = checkAndRedirect();
+            navigate(redirectPath);
+          } catch (profileError) {
+            console.error('Profile creation failed:', profileError);
+            setError('Profile creation failed. Please try again.');
+          }
+        }
       }
     } catch (err) {
       console.error('Registration failed:', err);
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
-      setSuccess(null);  // Clear success message
+      setSuccess(null);
     }
   };
-  
 
   return (
     <div className="login-container">
@@ -101,19 +130,46 @@ const LoginPage = () => {
 
       <form onSubmit={isRegister ? handleRegisterSubmit : handleLoginSubmit} className="login-form">
         {isRegister && (
-          <div className="form-group">
-            <label htmlFor="name">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Enter your name"
-              className="input-field"
-            />
-          </div>
+          <>
+            <div className="form-group">
+              <label htmlFor="name">Name</label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Enter your name"
+                className="input-field"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="address">Address</label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+                placeholder="Enter your address"
+                className="input-field"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phone">Phone</label>
+              <input
+                type="tel"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                placeholder="Enter your phone number"
+                className="input-field"
+              />
+            </div>
+          </>
         )}
 
         <div className="form-group">
@@ -121,7 +177,6 @@ const LoginPage = () => {
           <input
             type="email"
             id="email"
-            name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -135,7 +190,6 @@ const LoginPage = () => {
           <input
             type="password"
             id="password"
-            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -143,8 +197,6 @@ const LoginPage = () => {
             className="input-field"
           />
         </div>
-
-        
 
         <button type="submit" className="submit-btn">
           {isRegister ? 'Register' : 'Login'}
