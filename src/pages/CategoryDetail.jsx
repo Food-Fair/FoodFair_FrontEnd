@@ -73,7 +73,7 @@ const CategoryDetail = () => {
   return (
     <div className="category-detail-page">
       <div className="category-header">
-        <img src={cake_bill} alt={category_name} className="w-full" />
+        <img src={cake_bill} alt={category_name} className="w-full h-[25rem] mt-6" />
       </div>
 
       {/* Select Dropdown */}

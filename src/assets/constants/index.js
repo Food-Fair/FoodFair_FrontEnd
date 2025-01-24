@@ -4,7 +4,6 @@ import { dine_24,dine_25,dine_26,dine_27 } from "../images";
 export const navLinks = [
     { href: "/", label: "Home" },
     {href: "/cart", label: "Cart"},
-    { href: "/login", label: "Login" },
 ];
 
 export const categories = [

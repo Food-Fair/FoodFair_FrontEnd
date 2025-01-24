@@ -28,7 +28,7 @@ const FoodForm = ({ food, onSubmit, closeForm }) => {
     setIsDialogOpen(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const newFood = {
@@ -37,7 +37,6 @@ const FoodForm = ({ food, onSubmit, closeForm }) => {
       category: category,
       subCategory: formData.get('subCategory'),
       flavor: flavors,
-      images: images.length > 0 ? images : ["/placeholder.svg?height=100&width=100"], // Fallback image
       weight: weight,
       addOns: addOns,
     };
@@ -49,11 +48,42 @@ const FoodForm = ({ food, onSubmit, closeForm }) => {
       return;
     }
   
-    onSubmit(newFood);
-    closeDialog();
-    setTimeout(() => {
-      alert("Food saved successfully!");
-    }, 1000);
+    // Create FormData for API request
+    const apiFormData = new FormData();
+    apiFormData.append('foodDto', JSON.stringify(newFood));
+  
+    // Append images to FormData
+    const fileInput = e.target.querySelector('input[type="file"]');
+    if (fileInput && fileInput.files.length > 0) {
+      Array.from(fileInput.files).forEach(file => {
+        apiFormData.append('images', file);
+      });
+    }
+  
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.post(
+        'http://localhost:8080/admin/foodsCreate',
+        apiFormData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          }
+        }
+      );
+  
+      if (response.status === 200 || response.status === 201) {
+        onSubmit(response.data);
+        closeDialog();
+        setTimeout(() => {
+          alert("Food saved successfully!");
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Error creating food:", error);
+      alert(error.response?.data?.message || "Failed to create food. Please try again.");
+    }
   };
   
   
@@ -141,7 +171,6 @@ const FoodForm = ({ food, onSubmit, closeForm }) => {
               value={weight} 
               onChange={(e) => setWeight(parseFloat(e.target.value))} 
               className="mr-2" 
-              required 
             />
           </div>
         </div>

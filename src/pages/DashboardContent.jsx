@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const initialAdmin = {
-  name: "Admin User",
-  email: "admin@example.com",
-  phone: "+1 (555) 987-6543",
+  name: "Anika Masuma",
+  email: "masumfatema676@example.com",
+  phone: "+880 1743358147",
 };
 
 const DashboardContent = () => {

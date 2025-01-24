@@ -51,7 +51,9 @@ const LoginPage = () => {
       });
   
       if (response.status === 200) {
+                // After successful login
         localStorage.setItem('access_token', response.data.access_token);
+        window.dispatchEvent(new Event('loginStatusChanged')); // Add this line
         const redirectPath = checkAndRedirect();
         
         showNotification('Successfully logged in!', 'success');

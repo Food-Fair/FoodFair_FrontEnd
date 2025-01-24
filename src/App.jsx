@@ -15,6 +15,7 @@ import OrderForm from "./pages/OrderForm";
 import RegisterPage from "./pages/RegisterPage";
 import OrdersPage from "./pages/OrderPage";
 import PP from "./pages/PP";
+import BlogList from "./pages/BlogList";
 
 const App = () => {
   return (
@@ -35,6 +36,7 @@ const App = () => {
         <Route path='/order' element={<OrderForm/>} />
         <Route path='/register' element={<RegisterPage/>} />
         <Route path="/order_" element={<OrdersPage/>}/>
+        <Route path="/blogshow" element={<BlogList/>}/>
         </Routes>
 
         

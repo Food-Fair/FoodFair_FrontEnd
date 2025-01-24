@@ -266,10 +266,10 @@ const OrderPage = () => {
             <div key={order.id} className="order-card">
               <div className="order-header">
                 <div className="order-title">
-                <div className="flex  gap-4">
-  <h3 className="text-xl font-bold">Order_id</h3>
-  <small className="text-gray-500">ID: {order.id}</small>
-</div>
+                  <div className="flex  gap-4">
+                  <h3 className="text-xl font-bold">Order_id</h3>
+                  <small className="text-gray-500">ID: {order.id}</small>
+                  </div>
 
                   
                   {/* Add user details section */}

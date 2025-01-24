@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
+const ORDER_STATUSES = [
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'ON_PROGRESS', label: 'In Progress' },
+    { value: 'DELIVERED', label: 'Delivered' }
+  ];
+
 const PP = () => {
   const [customerData, setCustomerData] = useState(null);
   const [error, setError] = useState(null);
@@ -14,6 +20,51 @@ const PP = () => {
 
   
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Add this state
+
+  // Add these state variables at the beginning of your component
+const [orders, setOrders] = useState([]);
+const [selectedStatus, setSelectedStatus] = useState('PENDING');
+const [orderLoading, setOrderLoading] = useState(false);
+
+const fetchOrders = async (status) => {
+  setOrderLoading(true);
+  try {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await axios.get(
+      `http://localhost:8080/customer/get-orders?orderStatus=${status}&sortBy=dateTime`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (response.data) {
+      setOrders(response.data);
+        console.log('Orders:', response.data);
+    } else {
+      setOrders([]);
+    }
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    showNotification('Failed to load orders', 'error');
+    setOrders([]);
+  } finally {
+    setOrderLoading(false);
+  }
+};
+
+  // Add this useEffect to fetch orders when status changes
+useEffect(() => {
+    if (customerData) {
+      fetchOrders(selectedStatus);
+    }
+  }, [selectedStatus, customerData]);
+// Add this JSX after your profile card div and before the notification
 
 
   useEffect(() => {
@@ -112,6 +163,10 @@ const PP = () => {
       </div>
     );
   }
+
+  const formatDateTime = (dateTimeStr) => {
+    return new Date(dateTimeStr).toLocaleString();
+  };
 
   return (
     <>
@@ -224,6 +279,115 @@ const PP = () => {
             </div>
           </div>
         )}
+
+        {/* Orders Section */}
+<div className="mt-8 bg-white shadow-lg rounded-lg overflow-hidden">
+  <div className="p-6">
+    <h2 className="text-2xl font-bold mb-4">My Orders</h2>
+    
+    {/* Order Status Filter */}
+    <div className="flex space-x-4 mb-6">
+      {ORDER_STATUSES.map((status) => (
+        <button
+          key={status.value}
+          onClick={() => setSelectedStatus(status.value)}
+          className={`px-4 py-2 rounded-md transition-colors ${
+            selectedStatus === status.value
+              ? 'bg-[#de7f45] text-white'
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+        >
+          {status.label}
+        </button>
+      ))}
+    </div>
+
+    {/* Orders List */}
+<div className="space-y-4">
+  {orderLoading ? (
+    <div className="text-center py-4">Loading orders...</div>
+  ) : orders.length === 0 ? (
+    <div className="text-center py-4 text-gray-500">
+      No {selectedStatus.toLowerCase()} orders found
+    </div>
+  ) : (
+    orders.map((order) => (
+      <div
+        key={order.id}
+        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+      >
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-semibold text-lg">Order #{order.id.substring(0, 8)}</h3>
+            <p className="text-gray-600">
+              Delivery Time: {new Date(order.deliveryTime).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            order.orderStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+            order.orderStatus === 'ON_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+            'bg-green-100 text-green-800'
+          }`}>
+            {order.orderStatus === 'ON_PROGRESS' ? 'In Progress' : order.orderStatus}
+          </span>
+        </div>
+
+        {/* Order Items */}
+        <div className="mt-4 space-y-2">
+          {order.orderItems.map((item, index) => (
+            <div key={index} className="flex justify-between items-center">
+              <div className="flex items-center">
+                <div className="ml-3">
+                  <p className="font-medium">Cake with {item.flavorName} Flavor</p>
+                  <p className="text-sm text-gray-500">
+                    Quantity: {item.quantity} × {item.flavorPrice} Tk × {item.weight} pounds
+                  </p>
+                </div>
+              </div>
+              <p className="font-medium">
+                {(item.quantity * item.flavorPrice * item.weight).toFixed(2)} Tk
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Special Requirements */}
+        {order.specialRequirements && (
+          <div className="mt-4 bg-gray-50 p-3 rounded-md">
+            <p className="text-sm font-medium text-gray-700">Special Requirements:</p>
+            <p className="text-sm text-gray-600">{order.specialRequirements}</p>
+          </div>
+        )}
+
+        {/* Order Total */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Delivery Charge:</span>
+              <span>{order.deliveryCharge.toFixed(2)} Tk</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Payment Method:</span>
+              <span>{order.paymentMethod.replace('_', ' ')}</span>
+            </div>
+            <div className="flex justify-between items-center font-bold text-lg">
+              <span>Total Amount:</span>
+              <span className="text-[#de7f45]">{order.price.toFixed(2)} Tk</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))
+  )}
+</div>
+  </div>
+</div>
       </div>
     </>
   );

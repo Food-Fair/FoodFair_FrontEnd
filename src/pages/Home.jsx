@@ -42,19 +42,20 @@ const Home = () => {
       </div>
       <div className="relative w-full h-[30rem] mt-[3rem] slide-left slow-fade-in">
         <img
-          src='/anika.jpeg'
+          src='/anika.png'
           className="w-full h-full "
           alt="Descriptive text"
         />
-        <div className="absolute inset-0 flex justify-center items-end mb-[6rem] ml-[5rem] ">
+        <div className="absolute inset-0 flex justify-center items-end mb-[6rem] ml-[25rem]  ">
+          <a href="/blogshow" >
           <GenButton
-            text="Subscribe to Newsletter"
+            text="Read Blogs"
             bgColor="bg-black"
             textColor="text-white"
-            size="py-3 px-2"
+            size="py-3 px-3"
             borderRadius="rounded-lg"
-            onClick={openDialog} 
           />
+          </a>
         </div>
       </div>
       <DialogBox isOpen={isDialogOpen} closeDialog={closeDialog} />

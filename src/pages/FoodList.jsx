@@ -511,7 +511,7 @@ const FoodList = () => {
         </>
       )}
 
-      <FoodDetailModal
+      <FoodDetailModal 
         isOpen={selectedFoodId !== null}
         onClose={() => setSelectedFoodId(null)}
         foodId={selectedFoodId}
