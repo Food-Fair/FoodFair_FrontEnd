@@ -9,10 +9,7 @@ import "./index.css";
 import UserProfile from "./pages/UserProfile";
 import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
-import FoodPage from "./pages/FoodPage";
-import FoodExplorer from "./pages/FoodExplorer";
 import Cart from "./pages/Cart";
-import AdminFoodPage from "./pages/AdminFoodPage";
 import AddFood from "./pages/AddFood";
 import OrderForm from "./pages/OrderForm";
 import RegisterPage from "./pages/RegisterPage";
@@ -33,8 +30,6 @@ const App = () => {
         <Route path="/profile" element={<PP />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin" element={<AdminDashboard/>} />
-        <Route path="/foodpage" element={<FoodPage/>} />
-        <Route path='/food-explore' element={<FoodExplorer />} />
         <Route path="/cart" element={<Cart/>} />
         <Route path="/add" element={<AddFood/>} />
         <Route path='/order' element={<OrderForm/>} />

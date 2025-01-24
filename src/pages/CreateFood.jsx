@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import toast, { Toaster } from 'react-hot-toast';
 
 const CreateFood = () => {
   const [foodData, setFoodData] = useState({
@@ -14,8 +13,15 @@ const CreateFood = () => {
     deliveryTimeInstruction: ''
   });
   const [images, setImages] = useState([]);
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
-  // Handle input changes for basic fields
+  const showNotification = (message, type) => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFoodData(prev => ({
@@ -24,7 +30,6 @@ const CreateFood = () => {
     }));
   };
 
-  // Handle flavor changes
   const handleFlavorChange = (index, field, value) => {
     const newFlavors = [...foodData.flavor];
     newFlavors[index][field] = value;
@@ -34,7 +39,6 @@ const CreateFood = () => {
     }));
   };
 
-  // Add new flavor field
   const addFlavor = () => {
     setFoodData(prev => ({
       ...prev,
@@ -42,7 +46,6 @@ const CreateFood = () => {
     }));
   };
 
-  // Handle add-ons changes
   const handleAddOnsChange = (index, field, value) => {
     const newAddOns = [...foodData.addOns];
     newAddOns[index][field] = value;
@@ -52,7 +55,6 @@ const CreateFood = () => {
     }));
   };
 
-  // Add new add-on field
   const addAddOn = () => {
     setFoodData(prev => ({
       ...prev,
@@ -60,25 +62,33 @@ const CreateFood = () => {
     }));
   };
 
-  // Handle image files
   const handleImageChange = (e) => {
     setImages([...e.target.files]);
   };
 
-  // Handle form submission
-  // Frontend
+  const resetForm = () => {
+    setFoodData({
+      name: '',
+      description: '',
+      category: '',
+      subCategory: '',
+      flavor: [{ flavorName: '', price: '' }],
+      weight: '',
+      addOns: [{ name: '', description: '', price: '' }],
+      deliveryTimeInstruction: ''
+    });
+    setImages([]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const formData = new FormData();
-    
-    // Convert foodData to JSON string and append to FormData
     const foodDtoBlob = new Blob([JSON.stringify(foodData)], {
         type: 'application/json'
     });
     formData.append('foodDto', foodDtoBlob);
     
-    // Append images
     for (let i = 0; i < images.length; i++) {
         formData.append('images', images[i]);
     }
@@ -97,171 +107,249 @@ const CreateFood = () => {
             }
         );
         
-        console.log('Food created successfully:', response.data);
+        showNotification('Food item created successfully!', 'success');
+        resetForm();
     } catch (error) {
-        console.error('Error creating food:', error);
+        showNotification(error.response?.data?.message || 'Failed to create food item', 'error');
     }
-};
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Create New Food Item</h2>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <style>
+        {`
+          @keyframes shrink {
+            from { width: 100%; }
+            to { width: 0%; }
+          }
+        `}
+      </style>
 
-      {/* Basic Information */}
-      <div className="space-y-4">
-        <div>
-          <label className="block mb-1">Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={foodData.name}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1">Description:</label>
-          <textarea
-            name="description"
-            value={foodData.description}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1">Category:</label>
-          <input
-            type="text"
-            name="category"
-            value={foodData.category}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1">Sub Category:</label>
-          <input
-            type="text"
-            name="subCategory"
-            value={foodData.subCategory}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
-
-        {/* Flavors */}
-        <div>
-          <label className="block mb-1">Flavors:</label>
-          {foodData.flavor.map((flavor, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                placeholder="Flavor Name"
-                value={flavor.flavorName}
-                onChange={(e) => handleFlavorChange(index, 'flavorName', e.target.value)}
-                className="border rounded p-2"
-              />
-              <input
-                type="number"
-                placeholder="Price"
-                value={flavor.price}
-                onChange={(e) => handleFlavorChange(index, 'price', e.target.value)}
-                className="border rounded p-2"
+      {notification.show && (
+        <div
+          className={`fixed bottom-6 h-[4rem] w-[20rem] mr-[10rem] right-4 px-6 py-4 rounded-lg text-black shadow-lg 
+            transform transition-all duration-500 ease-in-out 
+            border-2 ${notification.type === 'success' ? 'border-green-500' : 'border-red-500'}
+            bg-white`}
+        >
+          <div className="flex items-center h-full">
+            <span className="text-lg font-normal leading-tight">
+              {notification.message}
+            </span>
+            <div className="h-1 bg-gray-200 absolute bottom-0 left-0 right-0 rounded-b-lg">
+              <div
+                className={`h-full ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} 
+                  transition-all duration-3000 ease-linear rounded-b-lg`}
+                style={{
+                  width: '100%',
+                  animation: 'shrink 3s linear forwards'
+                }}
               />
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={addFlavor}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            Add Flavor
-          </button>
+          </div>
         </div>
+      )}
+      
+      <div className="max-w-4xl mx-auto">
+        <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6 space-y-6">
+          <div className="border-b pb-4">
+            <h2 className="text-2xl font-bold text-gray-900">Create New Food Item</h2>
+            <p className="mt-1 text-sm text-gray-600">Fill in the details to create a new food item.</p>
+          </div>
 
-        {/* Add-ons */}
-        <div>
-          <label className="block mb-1">Add-ons:</label>
-          {foodData.addOns.map((addOn, index) => (
-            <div key={index} className="space-y-2 mb-4">
+          {/* Basic Information Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Name <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
-                placeholder="Add-on Name"
-                value={addOn.name}
-                onChange={(e) => handleAddOnsChange(index, 'name', e.target.value)}
-                className="w-full border rounded p-2"
-              />
-              <input
-                type="text"
-                placeholder="Description"
-                value={addOn.description}
-                onChange={(e) => handleAddOnsChange(index, 'description', e.target.value)}
-                className="w-full border rounded p-2"
-              />
-              <input
-                type="number"
-                placeholder="Price"
-                value={addOn.price}
-                onChange={(e) => handleAddOnsChange(index, 'price', e.target.value)}
-                className="w-full border rounded p-2"
+                name="name"
+                required
+                value={foodData.name}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
               />
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={addAddOn}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            Add Add-on
-          </button>
-        </div>
 
-        {/* Images */}
-        <div>
-          <label className="block mb-1">Images:</label>
-          <input
-            type="file"
-            multiple
-            onChange={handleImageChange}
-            className="w-full border rounded p-2"
-            accept="image/*"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Category <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="category"
+                required
+                value={foodData.category}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+              />
+            </div>
 
-        {/* Weight */}
-        <div>
-          <label className="block mb-1">Weight (in Pounds):</label>
-          <input
-            type="number"
-            name="weight"
-            value={foodData.weight}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Sub Category <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="subCategory"
+                required
+                value={foodData.subCategory}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+              />
+            </div>
 
-        {/* Delivery Time Instructions */}
-        <div>
-          <label className="block mb-1">Delivery Time Instructions:</label>
-          <textarea
-            name="deliveryTimeInstruction"
-            value={foodData.deliveryTimeInstruction}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Weight (in Pounds) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                name="weight"
+                required
+                value={foodData.weight}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="description"
+              required
+              value={foodData.description}
+              onChange={handleInputChange}
+              rows={3}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+            />
+          </div>
+
+          {/* Flavors Section */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Flavors <span className="text-red-500">*</span>
+            </h3>
+            <div className="space-y-4">
+              {foodData.flavor.map((flavor, index) => (
+                <div key={index} className="flex flex-col sm:flex-row gap-4">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Flavor Name"
+                    value={flavor.flavorName}
+                    onChange={(e) => handleFlavorChange(index, 'flavorName', e.target.value)}
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+                  />
+                  <input
+                    type="number"
+                    required
+                    placeholder="Price"
+                    value={flavor.price}
+                    onChange={(e) => handleFlavorChange(index, 'price', e.target.value)}
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addFlavor}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#de7f45] hover:bg-[#eaad87] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#de7f45]"
+              >
+                Add Flavor
+              </button>
+            </div>
+          </div>
+
+          {/* Add-ons Section (Optional) */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Add-ons (Optional)</h3>
+            <div className="space-y-4">
+              {foodData.addOns.map((addOn, index) => (
+                <div key={index} className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Add-on Name"
+                    value={addOn.name}
+                    onChange={(e) => handleAddOnsChange(index, 'name', e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={addOn.description}
+                    onChange={(e) => handleAddOnsChange(index, 'description', e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Price"
+                    value={addOn.price}
+                    onChange={(e) => handleAddOnsChange(index, 'price', e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addAddOn}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#de7f45] hover:bg-[#eaad87] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#de7f45]"
+              >
+                Add Add-on
+              </button>
+            </div>
+          </div>
+
+          {/* Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Images <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="file"
+              multiple
+              required
+              onChange={handleImageChange}
+              className="mt-1 block w-full"
+              accept="image/*"
+            />
+          </div>
+
+          {/* Delivery Instructions */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Delivery Time Instructions <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="deliveryTimeInstruction"
+              required
+              value={foodData.deliveryTimeInstruction}
+              onChange={handleInputChange}
+              rows={3}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
+            />
+          </div>
+
+          {/* Submit Button */}
+          <div className="pt-5">
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#de7f45] hover:bg-[#eaad87] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#de7f45]"
+              >
+                Create Food Item
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      <button
-        type="submit"
-        className="mt-4 bg-green-500 text-white px-6 py-2 rounded"
-      >
-        Create Food Item
-      </button>
-    </form>
+    </div>
   );
 };
 

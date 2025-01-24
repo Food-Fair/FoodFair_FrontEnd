@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Car, MapPin } from "lucide-react";
+import { Car, MapPin, Edit2 } from "lucide-react";
 
 
 const OrderForm = () => {
@@ -9,8 +9,46 @@ const OrderForm = () => {
   const [paymentMethod, setPaymentMethod] = useState("ON_CASH");
   const [deliveryTime, setDeliveryTime] = useState("");
   const [deliveryCharge, setDeliveryCharge] = useState(80.0);
+
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState("");
   
   const [customerData, setCustomerData] = useState(null);
+
+
+  const handleLocationUpdate = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert("No authentication token found");
+        return;
+      }
+
+      const response = await axios.put(
+        'http://localhost:8080/customer/update',
+        {
+          ...customerData, // Spread existing customer data
+          address: newLocation // Update only the address
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        setCustomerData(response.data);
+        setIsEditingLocation(false);
+        alert("Delivery location updated successfully!");
+      }
+    } catch (error) {
+      console.error('Error updating location:', error);
+      alert("Failed to update delivery location");
+    }
+  };
+
 
   const fetchCustomerData = async () => {
     try {
@@ -178,13 +216,57 @@ const handleOrderSubmit = async () => {
       </ul>
       {/* Add Delivery Location Display */}
       <div className="mb-4 p-3 bg-gray-50 rounded-md">
-        <div className="flex items-center gap-2">
-          <MapPin className="text-blue-600" size={20} />
-          <span className="font-medium">Delivery Location:</span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="text-blue-600" size={20} />
+            <span className="font-medium">Delivery Location:</span>
+          </div>
+          {!isEditingLocation && (
+            <button
+              onClick={() => {
+                setIsEditingLocation(true);
+                setNewLocation(customerData?.address || '');
+              }}
+              className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            >
+              <Edit2 size={16} />
+              <span className="text-sm">Edit</span>
+            </button>
+          )}
         </div>
-        <p className="mt-1 text-gray-700">
-          {customerData?.address || 'Loading...'}
-        </p>
+        
+        {isEditingLocation ? (
+          <div className="mt-2 space-y-2">
+            <input
+              type="text"
+              value={newLocation}
+              onChange={(e) => setNewLocation(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              placeholder="Enter new delivery location"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleLocationUpdate}
+                className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingLocation(false);
+                  setNewLocation(customerData?.address || '');
+                }}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-1 text-gray-700">
+            {customerData?.address || 'Loading...'}
+          </p>
+        )}
       </div>
       <div className="mb-4">
         <label className="block font-medium">Delivery Time:</label>

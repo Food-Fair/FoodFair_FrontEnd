@@ -3,6 +3,7 @@ import './LoginPage.css';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +33,15 @@ const LoginPage = () => {
     }
   };
 
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
+  const showNotification = (message, type) => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -43,24 +53,26 @@ const LoginPage = () => {
       if (response.status === 200) {
         localStorage.setItem('access_token', response.data.access_token);
         const redirectPath = checkAndRedirect();
-        navigate(redirectPath);
-  
-        setSuccess('Login successful!');
-        setError(null);
+        
+        showNotification('Successfully logged in!', 'success');
+        
+        // Delay navigation to show the notification
+        setTimeout(() => {
+          navigate(redirectPath);
+        }, 1000);
+
         setEmail('');
         setPassword('');
       }
     } catch (err) {
       console.error('Login failed:', err);
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-      setSuccess(null);
+      showNotification(err.response?.data?.message || 'Login failed. Please try again.', 'error');
     }
   };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {
-      // First, register the user
       const registerResponse = await axios.post('http://localhost:8080/api/register', {
         email: email,
         password: password,
@@ -68,7 +80,6 @@ const LoginPage = () => {
       });
 
       if (registerResponse.status === 200 || registerResponse.status === 201) {
-        // After successful registration, login to get the token
         const loginResponse = await axios.post('http://localhost:8080/api/login', {
           email: email,
           password: password,
@@ -78,7 +89,6 @@ const LoginPage = () => {
           const token = loginResponse.data.access_token;
           localStorage.setItem('access_token', token);
 
-          // Create customer profile
           try {
             await axios.post(
               'http://localhost:8080/customer/create',
@@ -95,8 +105,8 @@ const LoginPage = () => {
               }
             );
 
-            setSuccess('Registration and profile creation successful!');
-            setError(null);
+            showNotification('Registration successful!', 'success');
+            
             setName('');
             setEmail('');
             setPassword('');
@@ -105,24 +115,46 @@ const LoginPage = () => {
             setroles('ROLE_CUSTOMER');
             setIsRegister(false);
 
-            // Redirect after successful registration
-            const redirectPath = checkAndRedirect();
-            navigate(redirectPath);
+            setTimeout(() => {
+              const redirectPath = checkAndRedirect();
+              navigate(redirectPath);
+            }, 1500);
           } catch (profileError) {
-            console.error('Profile creation failed:', profileError);
-            setError('Profile creation failed. Please try again.');
+            showNotification('Profile creation failed. Please try again.', 'error');
           }
         }
       }
     } catch (err) {
-      console.error('Registration failed:', err);
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
-      setSuccess(null);
+      showNotification(err.response?.data?.message || 'Registration failed. Please try again.', 'error');
     }
   };
 
   return (
     <div className="login-container">
+      {notification.show && (
+        <div
+          className={`fixed bottom-6 h-[4rem] w-[20rem] mr-[10rem] right-4 px-6 py-4 rounded-lg text-black shadow-lg 
+            transform transition-all duration-500 ease-in-out 
+            border-2 ${notification.type === 'success' ? 'border-orange-400' : 'border-red-500'}
+            bg-white`}
+        >
+          <div className="flex items-center h-full">
+            <span className="text-lg font-normal leading-tight">
+              {notification.message}
+            </span>
+            <div className="h-1 bg-gray-200 absolute bottom-0 left-0 right-0 rounded-b-lg">
+              <div
+                className={`h-full ${notification.type === 'success' ? 'bg-orange-400' : 'bg-red-500'} 
+                  transition-all duration-3000 ease-linear rounded-b-lg`}
+                style={{
+                  width: '100%',
+                  animation: 'shrink 3s linear forwards'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       <h2>{isRegister ? 'Register' : 'Login'}</h2>
 
       {error && <p className="error-message">{error}</p>}
@@ -204,13 +236,16 @@ const LoginPage = () => {
       </form>
 
       <div className="toggle-action">
-        <p>
-          {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button onClick={() => setIsRegister(!isRegister)} className="toggle-btn">
-            {isRegister ? 'Login' : 'Register'}
-          </button>
-        </p>
-      </div>
+      <p>
+        {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+        <button 
+          onClick={() => setIsRegister(!isRegister)} 
+          className="text-custom-orange border-none bg-transparent cursor-pointer no-underline hover:text-custom-orange/80 transition-colors"
+        >
+          {isRegister ? 'Login' : 'Register'}
+        </button>
+      </p>
+    </div>
     </div>
   );
 };

@@ -98,13 +98,7 @@ const OrderPage = () => {
             <div key={index} className="order-card">
               <div className="order-header">
                 <div className="order-title">
-                  <h3>Order #{index + 1}</h3>
-                  {order.orderItems.map((item, itemIndex) => (
-                    <span key={itemIndex} className="food-name">
-                      {foodDetails[item.foodId]?.name || 'Loading...'}
-                      {itemIndex < order.orderItems.length - 1 ? ', ' : ''}
-                    </span>
-                  ))}
+                  <h3 className='font-bold'>Order #{index + 1}</h3>
                 </div>
                 <span className={`status ${order.orderStatus.toLowerCase()}`}>
                   {order.orderStatus}
@@ -112,15 +106,15 @@ const OrderPage = () => {
               </div>
 
               <div className="order-items">
-                <h4>Order Items:</h4>
+                <h4 className='font-bold'>Order Items:</h4>
                 {order.orderItems.map((item, itemIndex) => (
                   <div key={itemIndex} className="item-details">
                     <p><strong>Item:</strong> {foodDetails[item.foodId]?.name || 'Loading...'}</p>
                     <p><strong>Description:</strong> {foodDetails[item.foodId]?.description || 'Loading...'}</p>
                     <p><strong>Flavor:</strong> {item.flavorName}</p>
                     <p><strong>Quantity:</strong> {item.quantity}</p>
-                    <p><strong>Weight:</strong> {item.weight}kg</p>
-                    <p><strong>Price per item:</strong> Rs.{item.flavorPrice.toFixed(2)}</p>
+                    <p><strong>Weight:</strong> {item.weight} pound</p>
+                    <p><strong>Price per item:</strong> {item.flavorPrice.toFixed(2)} Tk</p>
                   </div>
                 ))}
               </div>
@@ -129,8 +123,8 @@ const OrderPage = () => {
                 <p><strong>Delivery Time:</strong> {formatDateTime(order.deliveryTime)}</p>
                 <p><strong>Special Requirements:</strong> {order.specialRequirements || 'None'}</p>
                 <p><strong>Payment Method:</strong> {order.paymentMethod}</p>
-                <p><strong>Delivery Charge:</strong> Rs.{order.deliveryCharge.toFixed(2)}</p>
-                <p><strong>Total Price:</strong> Rs.{order.price.toFixed(2)}</p>
+                <p><strong>Delivery Charge:</strong>  {order.deliveryCharge.toFixed(2)} Tk. </p>
+                <p><strong>Total Price:</strong>  {order.price.toFixed(2)} Tk. </p>
               </div>
             </div>
           ))}

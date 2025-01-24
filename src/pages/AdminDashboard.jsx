@@ -10,10 +10,20 @@ import OrdersContent from './OrdersContent';
 import { ChevronDown } from "lucide-react";
 import CreateFood from './CreateFood';
 import FoodList from './FoodList';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+
 
 const AdminDashboard = () => {
   const [selectedOption, setSelectedOption] = useState('dashboard');
   const [openDropdown, setOpenDropdown] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (selectedOption === 'orders') {
+      navigate('/order_');
+    }
+  }, [selectedOption, navigate]);
 
   const renderComponent = () => { 
     switch (selectedOption) { 
@@ -24,7 +34,7 @@ const AdminDashboard = () => {
       case 'blogs': 
         return <BlogsContent />; 
       case 'orders': 
-        return <OrdersContent />; 
+        return null;
       case 'food-list': 
         return <FoodList /> 
       default: 

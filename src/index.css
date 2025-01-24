@@ -78,8 +78,10 @@
     @apply font-montserrat text-slate-gray text-lg leading-7;
   }
 
-  .text-col {
-    @apply text-[#de7f45];
+  @layer components {
+    .colored-text {
+      @apply text-[#de7f45];
+    }
   }
 
   @keyframes fadeIn {

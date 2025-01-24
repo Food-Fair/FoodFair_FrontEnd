@@ -247,9 +247,9 @@ const FoodDetailModal = ({ isOpen, onClose, foodId }) => {
                   <h3 className="text-xl font-semibold mb-3">Available Flavors</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {food.flavor.map((flav, index) => (
-                      <div key={index} className="bg-blue-50 p-4 rounded-lg flex justify-between items-center">
+                      <div key={index} className="bg-orange-50 p-4 rounded-lg flex justify-between items-center">
                         <span className="font-medium">{flav.flavorName}</span>
-                        <span className="text-blue-600 font-semibold">${flav.price}</span>
+                        <span className="text-orange-600 font-semibold">${flav.price}</span>
                       </div>
                     ))}
                   </div>
@@ -362,7 +362,7 @@ const FoodList = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container  p-4 mx-auto">
       {/* Filter Form */}
       <form onSubmit={handleSubmit} className="mb-6 bg-white p-4 rounded shadow">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -376,7 +376,7 @@ const FoodList = () => {
               placeholder="Search by name"
       className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 
         placeholder-gray-400 shadow-sm 
-        focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500
+        focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]
         text-sm"
             />
           </div>
@@ -390,7 +390,7 @@ const FoodList = () => {
               placeholder="Search by Category"
               className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 
                 placeholder-gray-400 shadow-sm 
-                focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500
+                focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]
                 text-sm"
             />
           </div>
@@ -404,14 +404,14 @@ const FoodList = () => {
               placeholder="Search by SubCategory"
               className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 
                 placeholder-gray-400 shadow-sm 
-                focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500
+                focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]
                 text-sm"
             />
           </div>
         </div>
         <button
           type="submit"
-          className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+          className="mt-4 bg-[#de7f45] text-white px-4 py-2 rounded hover:bg-[#eaad87]"
         >
           Search
         </button>
@@ -474,7 +474,7 @@ const FoodList = () => {
                   <h4 className="text-sm font-semibold text-gray-700">Flavors:</h4>
                   <div className="mt-1">
                     {food.flavor.map((flav, index) => (
-                      <span key={index} className="inline-block bg-blue-100 rounded-full px-3 py-1 text-sm font-semibold text-blue-700 mr-2 mb-2">
+                      <span key={index} className="inline-block bg-orange-100 rounded-full px-3 py-1 text-sm font-semibold text-orange-700 mr-2 mb-2">
                         {flav.flavorName} - ${flav.price}
                       </span>
                     ))}
