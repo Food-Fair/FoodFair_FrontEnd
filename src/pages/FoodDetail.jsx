@@ -9,7 +9,13 @@ import { Separator } from "@/components/ui/separator";
 import { Star, StarHalf } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { set } from "react-hook-form";
+import { Checkbox } from "@/components/ui/checkbox";
+
+
 export default function FoodDetail() {
+  
+
+
   const { id } = useParams();
   const [foodItem, setFoodItem] = useState(null);
   const [addOns, setAddOns] = useState([]);
@@ -21,6 +27,7 @@ export default function FoodDetail() {
   const [price, setPrice] = useState(0);
   const [weight, setWeight] = useState(1); // Initialize as null
   const [quantity, setQuantity] = useState(1); // Add quantity state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [notification, setNotification] = useState({ 
     show: false, 
@@ -159,107 +166,113 @@ const handleSubmitReview = async () => {
     fetchFoodItem();
   }, [id]);
 
-  useEffect(() => {
-    if (foodItem) {
-      const flavorPrice = foodItem.flavor?.find((f) => f.flavorName === flavor)?.price || 0;
-      const basePrice = foodItem.flavor[flavorIx].price;
-      console.log("base Price"+basePrice);
-      {weight>1.5 ? 
-      setPrice(basePrice * weight) : setPrice(basePrice)}
-      console.log()
+ // Add these states
+const [selectedAddOns, setSelectedAddOns] = useState([]);
+const [basePrice, setBasePrice] = useState(0);
+
+// Modified toggleAddOn function
+// Filter valid addons (with name and price > 0)
+const getValidAddons = (addons) => {
+  return addons?.filter(addon => 
+    addon.name && 
+    addon.name.trim() !== '' && 
+    addon.price && 
+    addon.price > 0
+  ) || [];
+};
+
+// Modified toggleAddOn function
+const toggleAddOn = (addon) => {
+  if (!addon.name || !addon.price || addon.price <= 0) return;
+
+  setSelectedAddOns((prevSelected) => {
+    const isSelected = prevSelected.some(item => item.id === addon.id);
+    
+    if (isSelected) {
+      // Remove addon
+      const newAddons = prevSelected.filter(item => item.id !== addon.id);
+      setPrice(prev => prev - addon.price);
+      return newAddons;
+    } else {
+      // Add addon
+      setPrice(prev => prev + addon.price);
+      return [...prevSelected, addon];
     }
-  }, [flavor, weight, foodItem]);
+  });
+};
 
-  
-  
+// Update price calculation effect
+useEffect(() => {
+  if (foodItem) {
+    const flavorPrice = foodItem.flavor[flavorIx].price;
+    const addonsTotal = selectedAddOns.reduce((sum, addon) => sum + addon.price, 0);
+    const weightMultiplier = weight > 1.5 ? weight : 1;
+    console.log("flavorPrice:",flavorPrice+"weightMultiplier:"+weightMultiplier+"addonsTotal:"+addonsTotal);
+    const totalPrice = (flavorPrice * weightMultiplier) + addonsTotal;
+    setPrice(totalPrice);
+    setBasePrice(flavorPrice * weightMultiplier);
+  }
+}, [flavor, weight, foodItem, flavorIx, selectedAddOns]);
 
-  const toggleAddOn = (option) => {
-    setAddOns((prevAddOns) =>
-      prevAddOns.includes(option)
-        ? prevAddOns.filter((addOn) => addOn !== option)
-        : [...prevAddOns, option]
+
+const handleAddToCart = () => {
+  if (!isLoggedIn) {
+    showNotification('Please login to add items to cart', 'error');
+    return;
+  }
+
+  if (userType === 'admin') {
+    showNotification('Administrators cannot add items to cart', 'error');
+    return;
+  }
+
+  try {
+    // Filter valid addons before adding to cart
+    const validAddons = selectedAddOns.filter(addon => 
+      addon.name && 
+      addon.name.trim() !== '' && 
+      addon.price && 
+      addon.price > 0
     );
-  };
 
-  console.log(id)
-  const handleAddToCart = () => {
-    // Check authentication
-    if (!isLoggedIn) {
-      showNotification('Please login to add items to cart', 'error');
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-      return;
-    }
-  
-    // Check if user is admin
-    if (userType === 'admin') {
-      showNotification('Administrators cannot add items to cart', 'error');
-      return;
-    }
-  
-    // Validate selections
-    if (foodItem.category==='cake' & !weight) {
-      showNotification('Please select a weight', 'error');
-      return;
-    }
-  
-    if (!flavor) {
-      showNotification('Please select a flavor', 'error');
-      return;
-    }
-  
-    try {
-      const cartItem = {
-        id: id,
-        name: foodItem.name,
-        imageUrl: foodItem.images && foodItem.images.length > 0
-          ? `http://localhost:8080/foods/image/${foodItem.images[0]}`
-          : "/placeholder-image.jpg",
-        flavor,
-        weight: parseFloat(foodItem.weight),
-        addOns,
-        price: parseFloat(price),
-        quantity: 1,
-        totalPrice: parseFloat(price)
-      };
-  
-      const cart = JSON.parse(localStorage.getItem("cart")) || {};
-      const itemKey = `${cartItem.id}_${cartItem.flavor}_${cartItem.weight}`;
-  
-      if (cart[itemKey]) {
-        cart[itemKey].quantity += 1;
-        cart[itemKey].totalPrice = cart[itemKey].price * cart[itemKey].quantity;
-      } else {
-        cart[itemKey] = cartItem;
-      }
-  
-      localStorage.setItem("cart", JSON.stringify(cart));
-      window.dispatchEvent(new Event('cartUpdated'));
-  
-      showNotification(
-        `Added to cart:  ${foodItem.name}`,
-        'success'
-      );
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      showNotification('Failed to add item to cart', 'error');
-    }
-  };
+    const cartItem = {
+      id: id,
+      name: foodItem.name,
+      imageUrl: foodItem.images?.[0]
+        ? `http://localhost:8080/foods/image/${foodItem.images[0]}`
+        : "/placeholder-image.jpg",
+      flavor,
+      weight: parseFloat(weight),
+      addOns: validAddons,
+      basePrice: parseFloat(basePrice),
+      addOnsTotal: validAddons.reduce((sum, addon) => sum + addon.price, 0),
+      price: parseFloat(price),
+      quantity: 1,
+      totalPrice: parseFloat(price)
+    };
 
+    const cart = JSON.parse(localStorage.getItem("cart")) || {};
+    const itemKey = `${cartItem.id}_${cartItem.flavor}_${cartItem.weight}_${validAddons.map(a => a.id).sort().join('_')}`;
 
-  // Add debug logging
-  useEffect(() => {
-    console.log("Current weight:", weight);
-    console.log("Current price:", price);
-  }, [weight, price]);
-
-  const handleAddReview = () => {
-    if (review.trim()) {
-      setReviews([...reviews, review]);
-      setReview("");
+    if (cart[itemKey]) {
+      cart[itemKey].quantity += 1;
+      cart[itemKey].totalPrice = cart[itemKey].price * cart[itemKey].quantity;
+    } else {
+      cart[itemKey] = cartItem;
     }
-  };
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event('cartUpdated'));
+
+    showNotification(
+      `Added to cart: ${foodItem.name} with ${validAddons.length} add-ons`,
+      'success'
+    );
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    showNotification('Failed to add item to cart', 'error');
+  }
+};
 
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -270,16 +283,45 @@ const handleSubmitReview = async () => {
     <div className="container mx-auto px-4 py-8">
       <Card className="overflow-hidden">
         <div className="md:flex">
-          <div className="md:w-1/2">
-            <img
-              src={`http://localhost:8080/foods/image/${foodItem.images?.[0]}`}
-              alt={foodItem.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.src = "/placeholder-image.jpg";
-              }}
-            />
-          </div>
+        <div className="md:w-1/2 relative aspect-square group">
+  <img
+    src={`http://localhost:8080/foods/image/${foodItem.images?.[currentImageIndex]}`}
+    alt={foodItem.name}
+    className="w-full h-full object-cover absolute inset-0"
+    onError={(e) => {
+      e.target.src = "/placeholder-image.jpg";
+    }}
+  />
+  
+  {foodItem.images?.length > 1 && (
+    <>
+      {/* Navigation arrows */}
+      <button
+        onClick={() => setCurrentImageIndex(prev => 
+          prev === 0 ? foodItem.images.length - 1 : prev - 1
+        )}
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full
+          opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        ←
+      </button>
+      <button
+        onClick={() => setCurrentImageIndex(prev => 
+          prev === foodItem.images.length - 1 ? 0 : prev + 1
+        )}
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full
+          opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        →
+      </button>
+      
+      {/* Image counter */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+        {currentImageIndex + 1} / {foodItem.images.length}
+      </div>
+    </>
+  )}
+</div>
           <CardContent className="md:w-1/2 p-6">
             <CardHeader>
               <CardTitle className="text-2xl font-bold">{foodItem.name}</CardTitle>
@@ -343,20 +385,52 @@ const handleSubmitReview = async () => {
                 </Select>
               </div> */}
               
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Add-Ons:</label>
-                <div className="flex gap-4">
-                  <div className="flex items-center">
-                    <Checkbox id="extra-chocolate" onCheckedChange={() => toggleAddOn("Extra Chocolate")} />
-                    <label htmlFor="extra-chocolate" className="ml-2 text-sm text-gray-700">Extra Chocolate</label>
-                  </div>
-                  <div className="flex items-center">
-                    <Checkbox id="extra-sprinkles" onCheckedChange={() => toggleAddOn("Extra Sprinkles")} />
-                    <label htmlFor="extra-sprinkles" className="ml-2 text-sm text-gray-700">Extra Sprinkles</label>
-                  </div>
-                </div>
-              </div> */}
-              
+              {foodItem.addOns && getValidAddons(foodItem.addOns).length > 0 && (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Add-Ons:</label>
+    <div className="space-y-2">
+      {getValidAddons(foodItem.addOns).map((addon) => (
+        <div key={addon.id} className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Checkbox
+              id={`addon-${addon.id}`}
+              checked={selectedAddOns.some(item => item.id === addon.id)}
+              onCheckedChange={() => toggleAddOn(addon)}
+            />
+            <label htmlFor={`addon-${addon.id}`} className="ml-2 text-sm text-gray-700">
+              {addon.name} (+{addon.price} TK)
+            </label>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Price Breakdown */}
+    <div className="mt-4 space-y-2 bg-gray-50 p-3 rounded-md">
+      <div className="flex justify-between text-sm">
+        <span>Base Price:</span>
+        <span>{basePrice} TK</span>
+      </div>
+      {selectedAddOns.length > 0 && (
+        <div className="space-y-1">
+          <div className="text-sm font-medium">Add-ons:</div>
+          {selectedAddOns.map(addon => (
+            <div key={addon.id} className="flex justify-between text-sm text-gray-600">
+              <span>{addon.name}</span>
+              <span>+{addon.price} TK</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="pt-2 border-t border-gray-200">
+        <div className="flex justify-between font-medium">
+          <span>Total Price:</span>
+          <span>{price} TK</span>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
               <p className="text-lg font-semibold">Total Price: {price} TK</p>
               
               <Button className="w-full" onClick={handleAddToCart}>Add to Cart</Button>

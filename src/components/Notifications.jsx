@@ -52,7 +52,7 @@ const Notifications = () => { // Removed userId as prop; will fetch internally
       <button onClick={toggleNotifications} className="relative">
         <FiBell size={24} className="text-gray-600 hover:text-[#de7f45] cursor-pointer" />
         {notifications.length > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+          <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold leading-none text-white bg-red-500 rounded-full">
             {notifications.length}
           </span>
         )}

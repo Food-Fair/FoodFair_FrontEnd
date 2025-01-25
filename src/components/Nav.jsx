@@ -43,6 +43,7 @@ const Nav = () => {
       if (isLogged) {
         const type = localStorage.getItem('user_type');
         setUserType(type);
+        console.log('User typeeeeeeeeeeeeeeeeeeeeeeeeeeee:', type);
       } else {
         setUserType(null);
       }
@@ -135,11 +136,13 @@ useEffect(() => {
         <ul className="hidden lg:flex flex-1 justify-end items-center gap-16 mr-[2]">
           {getFilteredNavLinks().map((item) => (
             <li key={item.label} className="flex items-center">
+              {console.log("items",item.label)}
               <Link 
                 to={item.href}
                 className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45] relative"
               >
                 {item.label}
+                {console.log("is logged in",isLoggedIn +"user type",userType+"item id",item.label)}
                 {item.id === 'cart' && hasCartItems && userType !== 'admin' && (
                   <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full"></span>
                 )}

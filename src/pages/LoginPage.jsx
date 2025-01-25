@@ -54,20 +54,28 @@ const LoginPage = () => {
       });
   
       if (response.status === 200) {
-                // After successful login
+        // Store token first
         localStorage.setItem('access_token', response.data.access_token);
-        window.dispatchEvent(new Event('loginStatusChanged')); // Add this line
-        const redirectPath = checkAndRedirect();
-
-        const userInfo = UserService.setUserTypeFromToken();
         
+        // Set user type and get user info
+        const userInfo = UserService.setUserTypeFromToken();
+        console.log('User info after login:', userInfo); // Debug log
+        
+        // Dispatch login status change event
+        window.dispatchEvent(new Event('loginStatusChanged'));
+        
+        // Show notification
         showNotification('Successfully logged in!', 'success');
         
-        // Delay navigation to show the notification
+        // Get redirect path
+        const redirectPath = checkAndRedirect();
+        console.log('Redirecting to:', redirectPath); // Debug log
+        
+        // Delay navigation
         setTimeout(() => {
-          navigate(redirectPath);
+          navigate(redirectPath, { replace: true });
         }, 1000);
-
+  
         setEmail('');
         setPassword('');
       }
@@ -94,6 +102,8 @@ const LoginPage = () => {
 
         if (loginResponse.status === 200) {
           const token = loginResponse.data.access_token;
+          localStorage.setItem('access_token', token);
+          
 
           try {
             await axios.post(
