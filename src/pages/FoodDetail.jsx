@@ -194,6 +194,7 @@ const handleSubmitReview = async () => {
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event('cartUpdated'));
 
     alert(
       `Added to cart: ${flavor} ${foodItem.name}, ${weight} pounds. Total Price: ${price} TK`
@@ -245,8 +246,7 @@ const handleSubmitReview = async () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Flavor:</label>
                 <Select
-                  defaultValue=""
-                    value={flavor}
+                    value={foodItem.flavor[0].flavorName}
                     onValueChange={(selectedFlavor) => {
                       setFlavor(selectedFlavor);
                       const index = foodItem.flavor.findIndex((f) => f.flavorName === selectedFlavor);
@@ -255,7 +255,8 @@ const handleSubmitReview = async () => {
                   >
 
                   <SelectTrigger className=" bg-white border border-gray-300 rounded-md shadow-md focus:ring focus:ring-indigo-200">
-                    <SelectValue placeholder="Select a flavor" />
+                    <SelectValue
+                  placeholder="Select a flavor" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-300 shadow-lg rounded-md z-50">
                     {foodItem.flavor?.map((f, index) => (

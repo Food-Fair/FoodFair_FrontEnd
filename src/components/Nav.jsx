@@ -10,25 +10,39 @@ const Nav = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const navigate = useNavigate();
 
-  // Function to check login status
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem('access_token');
-    setIsLoggedIn(!!token);
-  };
+  const [hasCartItems, setHasCartItems] = useState(false);
 
+  // Add this useEffect to check cart status
   useEffect(() => {
-    // Check initial login status
-    checkLoginStatus();
-
-    // Create a custom event listener for login status changes
-    window.addEventListener('loginStatusChanged', checkLoginStatus);
-
-    // Cleanup
+    const checkCart = () => {
+      const cart = localStorage.getItem('cart');
+      if (!cart) {
+        setHasCartItems(false);
+        return;
+      }
+  
+      try {
+        const parsedCart = JSON.parse(cart);
+        // Check if cart is an object and has any items
+        const hasItems = Object.keys(parsedCart).length > 0;
+        setHasCartItems(hasItems);
+      } catch (error) {
+        console.error('Error parsing cart:', error);
+        setHasCartItems(false);
+      }
+    };
+  
+    // Check initially
+    checkCart();
+  
+    // Add event listener for cart changes
+    window.addEventListener('cartUpdated', checkCart);
+  
     return () => {
-      window.removeEventListener('loginStatusChanged', checkLoginStatus);
+      window.removeEventListener('cartUpdated', checkCart);
     };
   }, []);
-
+  
   // Add event listener for storage changes
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -79,9 +93,15 @@ const Nav = () => {
 
         <ul className="hidden lg:flex flex-1 justify-end items-center gap-16 mr-[2]">
           {navLinks.map((item) => (
-            <li key={item.label}>
-              <a href={item.href} className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45]">
+            <li key={item.label} className="relative">
+              <a 
+                href={item.href} 
+                className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45]"
+              >
                 {item.label}
+                {item.id === 'cart' && hasCartItems && (
+                  <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
               </a>
             </li>
           ))}
@@ -118,11 +138,17 @@ const Nav = () => {
         {isOpen && (
           <div className="absolute top-[5.7rem] z-20 right-0 w-[40%] bg-white lg:hidden shadow-lg rounded-lg border border-gray-300">
             <ul className="flex flex-col items-center p-4">
-              {navLinks.map((item) => (
+            {navLinks.map((item) => (
                 <div key={item.label}>
-                  <li className="py-2">
-                    <a href={item.href} className="font-montserrat text-lg text-slate-gray hover:text-[#de7f45]">
+                  <li className="py-2 relative">
+                    <a 
+                      href={item.href} 
+                      className="font-montserrat text-lg text-slate-gray hover:text-[#de7f45]"
+                    >
                       {item.label}
+                      {item.id === 'cart' && hasCartItems && (
+                        <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                      )}
                     </a>
                   </li>
                   <hr className="my-4 h-[2px] bg-[#e3dddd] border-0" />

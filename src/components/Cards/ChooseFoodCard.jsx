@@ -7,7 +7,7 @@ const ChooseFoodCard = React.memo(({ categories }) => {
   useScrollReveal();
 
   return (
-    <div className="flex flex-wrap justify-center gap-6">
+    <div className="flex flex-wrap justify-center gap-3">
       {categories.map((item) => (
         <div
           key={item.foodId}

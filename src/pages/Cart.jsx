@@ -36,6 +36,7 @@ const Cart = () => {
   setCart(updatedCart);
   localStorage.setItem("cart", JSON.stringify(updatedCart));
   calculateTotal(updatedCart);
+  window.dispatchEvent(new Event('cartUpdated'));
 };
 
   const removeItem = (itemKey) => {
@@ -44,11 +45,13 @@ const Cart = () => {
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     calculateTotal(updatedCart);
+    window.dispatchEvent(new Event('cartUpdated'));
   };
 
   const clearCart = () => {
     setCart({});
     localStorage.removeItem("cart");
+    window.dispatchEvent(new Event('cartUpdated'));
     setTotalPrice(0);
   };
 

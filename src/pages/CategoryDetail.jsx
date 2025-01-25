@@ -77,7 +77,7 @@ const CategoryDetail = () => {
       </div>
 
       {/* Select Dropdown */}
-      <div className="mb-8 flex justify-center mt-8">
+      <div className=" flex justify-center mt-8">
   <Select
     value={selectedSubCategory}
     onValueChange={(value) => setSelectedSubCategory(value)}
@@ -104,7 +104,7 @@ const CategoryDetail = () => {
 
 
       {/* Render Food Cards with Images */}
-      <div className="center max-container w-4/5">
+      <div className="center  w-full">
       <div className="grid grid-cols-1 md:grid-rows-3 gap-4">
       <ChooseFoodCard categories={foodItems} />
 

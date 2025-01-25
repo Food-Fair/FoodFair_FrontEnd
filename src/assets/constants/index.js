@@ -3,7 +3,7 @@ import { dine_24,dine_25,dine_26,dine_27 } from "../images";
 
 export const navLinks = [
     { href: "/", label: "Home" },
-    {href: "/cart", label: "Cart"},
+    {href: "/cart", label: "Cart", id: "cart"},
 ];
 
 export const categories = [
