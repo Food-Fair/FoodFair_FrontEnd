@@ -1,0 +1,137 @@
+The jittering might be caused by the rapid state changes and event dispatches. Here's how you can smooth it out:
+
+First, combine your state updates and localStorage operations in the logout handler:
+React JSX
+
+Collapse
+const handleConfirmLogout = async () => {
+  // Batch state updates
+  setShowConfirmation(false);
+  setIsLoggedIn(false);
+  setHasCartItems(false);
+
+  // Clear localStorage in one go
+  localStorage.clear(); // This will remove both 'access_token' and 'cart'
+  // Or if you want to be specific:
+  // localStorage.removeItem('access_token');
+  // localStorage.removeItem('cart');
+
+  // Single event dispatch
+  window.dispatchEvent(new Event('loginStatusChanged'));
+
+  // Navigate last
+  navigate('/', { replace: true }); // Using replace to prevent back navigation
+};
+Update your useEffects to be more efficient:
+React JSX
+
+Collapse
+// Combined useEffect for login status
+useEffect(() => {
+  const checkLoginStatus = () => {
+    const token = localStorage.getItem('access_token');
+    if (!!token !== isLoggedIn) { // Only update if there's a change
+      setIsLoggedIn(!!token);
+    }
+  };
+
+  checkLoginStatus();
+
+  const handleStorageChange = (e) => {
+    if (e.key === 'access_token') {
+      checkLoginStatus();
+    }
+  };
+
+  window.addEventListener('loginStatusChanged', checkLoginStatus);
+  window.addEventListener('storage', handleStorageChange);
+
+  return () => {
+    window.removeEventListener('loginStatusChanged', checkLoginStatus);
+    window.removeEventListener('storage', handleStorageChange);
+  };
+}, [isLoggedIn]); // Add isLoggedIn to dependency array
+
+// Separate useEffect for cart status with debounce
+useEffect(() => {
+  const checkCart = () => {
+    try {
+      const cart = localStorage.getItem('cart');
+      const hasItems = cart ? Object.keys(JSON.parse(cart)).length > 0 : false;
+      if (hasItems !== hasCartItems) { // Only update if there's a change
+        setHasCartItems(hasItems);
+      }
+    } catch (error) {
+      console.error('Error checking cart:', error);
+      setHasCartItems(false);
+    }
+  };
+
+  // Debounce the cart check
+  let timeoutId;
+  const handleCartUpdate = () => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(checkCart, 100); // 100ms delay
+  };
+
+  checkCart();
+  window.addEventListener('cartUpdated', handleCartUpdate);
+
+  return () => {
+    window.removeEventListener('cartUpdated', handleCartUpdate);
+    clearTimeout(timeoutId);
+  };
+}, [hasCartItems]); // Add hasCartItems to dependency array
+Use replace instead of push for navigation:
+React JSX
+
+const navigate = useNavigate();
+
+const handleConfirmLogout = () => {
+  // ... other logic ...
+  navigate('/', { replace: true });
+};
+If you're using React Router, consider using Link instead of a tags:
+React JSX
+
+import { Link } from 'react-router-dom';
+
+// Replace anchor tags with Link
+<Link 
+  to={item.href}
+  className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45] relative"
+>
+  {item.label}
+  {item.id === 'cart' && hasCartItems && (
+    <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+  )}
+</Link>
+Add a loading state if needed:
+React JSX
+
+Collapse
+const [isLoading, setIsLoading] = useState(false);
+
+const handleConfirmLogout = async () => {
+  setIsLoading(true);
+  try {
+    setShowConfirmation(false);
+    setIsLoggedIn(false);
+    setHasCartItems(false);
+    
+    localStorage.clear();
+    window.dispatchEvent(new Event('loginStatusChanged'));
+    
+    navigate('/', { replace: true });
+  } finally {
+    setIsLoading(false);
+  }
+};
+These changes should help reduce the jittering by:
+
+Batching state updates
+Using debounced event handlers
+Preventing unnecessary re-renders
+Using proper navigation methods
+Adding loading states where needed
+Also, make sure your routes are properly set up in your main App component with proper route configurations to handle transitions smoothly.

@@ -3,79 +3,59 @@ import { headerLogo } from '../assets/images';
 import { hamburger } from '../assets/icons';
 import { navLinks } from '../assets/constants';
 import { useNavigate } from 'react-router-dom';
-import Notifications from './Notifications';
 
 const Nav = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [hasCartItems, setHasCartItems] = useState(false);
-  
   const navigate = useNavigate();
 
-  const enhancedNavLinks = [
-    ...navLinks,
-    ...(isLoggedIn ? [{ label: 'Notifications', component: Notifications }] : [])
-  ];
+  const [hasCartItems, setHasCartItems] = useState(false);
 
-  // Combined useEffect for login status
+  // Add this useEffect to check cart status
   useEffect(() => {
-    const checkLoginStatus = () => {
-      const token = localStorage.getItem('access_token');
-      setIsLoggedIn(!!token);
-    };
-
-    // Check initial login status
-    checkLoginStatus();
-
-    // Add event listeners
-    window.addEventListener('loginStatusChanged', checkLoginStatus);
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'access_token') {
-        checkLoginStatus();
-      }
-    });
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('loginStatusChanged', checkLoginStatus);
-      window.removeEventListener('storage', checkLoginStatus);
-    };
-  }, []); // Empty dependency array
-
-// Separate useEffect for cart status
-useEffect(() => {
-  const checkCart = () => {
-    try {
+    const checkCart = () => {
       const cart = localStorage.getItem('cart');
       if (!cart) {
         setHasCartItems(false);
         return;
       }
-
-      const parsedCart = JSON.parse(cart);
-      const hasItems = parsedCart && Object.keys(parsedCart).length > 0;
-      setHasCartItems(hasItems);
-    } catch (error) {
-      console.error('Error checking cart:', error);
-      setHasCartItems(false);
-    }
-  };
-
-  // Check initially
-  checkCart();
-
-  // Add event listener for cart changes
-  const handleCartUpdate = () => {
+  
+      try {
+        const parsedCart = JSON.parse(cart);
+        // Check if cart is an object and has any items
+        const hasItems = Object.keys(parsedCart).length > 0;
+        setHasCartItems(hasItems);
+      } catch (error) {
+        console.error('Error parsing cart:', error);
+        setHasCartItems(false);
+      }
+    };
+  
+    // Check initially
     checkCart();
-  };
+  
+    // Add event listener for cart changes
+    window.addEventListener('cartUpdated', checkCart);
+  
+    return () => {
+      window.removeEventListener('cartUpdated', checkCart);
+    };
+  }, []);
+  
+  // Add event listener for storage changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'access_token') {
+        checkLoginStatus();
+      }
+    };
 
-  window.addEventListener('cartUpdated', handleCartUpdate);
-
-  return () => {
-    window.removeEventListener('cartUpdated', handleCartUpdate);
-  };
-}, []);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -86,21 +66,11 @@ useEffect(() => {
   };
 
   const handleConfirmLogout = () => {
-    // First handle logout
     localStorage.removeItem('access_token');
     setIsLoggedIn(false);
     setShowConfirmation(false);
+    // Dispatch custom event
     window.dispatchEvent(new Event('loginStatusChanged'));
-  
-    // Then handle cart cleanup
-    setHasCartItems(false); // Directly update the state
-    localStorage.removeItem('cart');
-    
-    // Use setTimeout to ensure events are dispatched in order
-    setTimeout(() => {
-      window.dispatchEvent(new Event('cartUpdated'));
-    }, 0);
-  
     navigate('/');
   };
 
@@ -122,62 +92,48 @@ useEffect(() => {
         </a>
 
         <ul className="hidden lg:flex flex-1 justify-end items-center gap-16 mr-[2]">
-  {navLinks.map((item) => (
-    <li key={item.label} className="flex items-center">
-      <a 
-        href={item.href} 
-        className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45] relative"
-      >
-        {item.label}
-        {item.id === 'cart' && hasCartItems && (
-          <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-        )}
-      </a>
-    </li>
-  ))}
-  {/* Separate Notifications item */}
-  {isLoggedIn && (
-    <li className="flex items-center">
-      <Notifications />
-    </li>
-  )}
-  {/* Login/Logout item */}
-  <li className="flex items-center">
-    {isLoggedIn ? (
-      <button 
-        onClick={handleLogout}
-        className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45]"
-      >
-        Logout
-      </button>
-    ) : (
-      <a 
-        href="/login"
-        className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45]"
-      >
-        Login
-      </a>
-    )}
-  </li>
-</ul>
-        {/* Hamburger Menu for smaller screens */}
-<div className="lg:hidden flex items-center gap-4 ml-[2rem]">
-  {/* Mobile Notification Icon */}
-  {isLoggedIn && (
-    <div className="flex items-center">
-      <Notifications />
-    </div>
-  )}
-  
-  <img
-    src={hamburger}
-    alt="Hamburger"
-    width={25}
-    height={25}
-    onClick={toggleMenu}
-    className="cursor-pointer"
-  />
-</div>
+          {navLinks.map((item) => (
+            <li key={item.label} className="relative">
+              <a 
+                href={item.href} 
+                className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45]"
+              >
+                {item.label}
+                {item.id === 'cart' && hasCartItems && (
+                  <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </a>
+            </li>
+          ))}
+          <li>
+            {isLoggedIn ? (
+              <button 
+                onClick={handleLogout}
+                className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45]"
+              >
+                Logout
+              </button>
+            ) : (
+              <a 
+                href="/login"
+                className="font-montserrat leading-normal text-lg text-slate-gray hover:text-[#de7f45]"
+              >
+                Login
+              </a>
+            )}
+          </li>
+        </ul>
+
+        <div className="lg:hidden flex items-center ml-[2rem]">
+          <img
+            src={hamburger}
+            alt="Hamburger"
+            width={25}
+            height={25}
+            onClick={toggleMenu}
+            className="cursor-pointer"
+          />
+        </div>
 
         {isOpen && (
           <div className="absolute top-[5.7rem] z-20 right-0 w-[40%] bg-white lg:hidden shadow-lg rounded-lg border border-gray-300">
@@ -187,7 +143,7 @@ useEffect(() => {
                   <li className="py-2 relative">
                     <a 
                       href={item.href} 
-                      className="font-montserrat text-lg text-slate-gray hover:text-[#de7f45] relative"
+                      className="font-montserrat text-lg text-slate-gray hover:text-[#de7f45]"
                     >
                       {item.label}
                       {item.id === 'cart' && hasCartItems && (
