@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './LoginPage.css';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
+import UserService from '../services/UserService';
+import { Link } from 'react-router-dom';
 
 
 const LoginPage = () => {
@@ -14,6 +16,7 @@ const LoginPage = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
 
   const navigate = useNavigate();
 
@@ -55,6 +58,8 @@ const LoginPage = () => {
         localStorage.setItem('access_token', response.data.access_token);
         window.dispatchEvent(new Event('loginStatusChanged')); // Add this line
         const redirectPath = checkAndRedirect();
+
+        const userInfo = UserService.setUserTypeFromToken();
         
         showNotification('Successfully logged in!', 'success');
         
@@ -90,6 +95,7 @@ const LoginPage = () => {
         if (loginResponse.status === 200) {
           const token = loginResponse.data.access_token;
           localStorage.setItem('access_token', token);
+          const userInfo = UserService.setUserTypeFromToken();
 
           try {
             await axios.post(
@@ -132,7 +138,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-container transition-all duration-300 ease-in-out">
       {notification.show && (
         <div
           className={`fixed bottom-6 h-[4rem] w-[20rem] mr-[10rem] right-4 px-6 py-4 rounded-lg text-black shadow-lg 

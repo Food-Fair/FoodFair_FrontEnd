@@ -16,6 +16,8 @@ import RegisterPage from "./pages/RegisterPage";
 import OrdersPage from "./pages/OrderPage";
 import PP from "./pages/PP";
 import BlogList from "./pages/BlogList";
+import AdminRoute from "./pages/AdminRoute";
+import CreateFood from "./pages/CreateFood";
 
 const App = () => {
   return (
@@ -29,10 +31,18 @@ const App = () => {
         <Route path="/category/:category_name" element={<CategoryDetail />} />
         <Route path="/detail/:id" element={<FoodDetail />} />
         <Route path="/profile" element={<PP />} />
+        <Route 
+          path="/admin/*" 
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } 
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin" element={<AdminDashboard/>} />
         <Route path="/cart" element={<Cart/>} />
-        <Route path="/add" element={<AddFood/>} />
+        <Route path="/add" element={<CreateFood/>} />
         <Route path='/order' element={<OrderForm/>} />
         <Route path='/register' element={<RegisterPage/>} />
         <Route path="/order_" element={<OrdersPage/>}/>

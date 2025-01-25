@@ -2,9 +2,17 @@
 import { dine_24,dine_25,dine_26,dine_27 } from "../images";
 
 export const navLinks = [
-    { href: "/", label: "Home" },
-    {href: "/cart", label: "Cart", id: "cart"},
-];
+    { label: "Home", href: "/" },
+    { label: "Cart", href: "/cart", id: "cart" },
+    { label: "Profile", href: "/profile", id: "profile" },
+  ];
+  
+  export const adminNavLinks = [
+    { label: "Home", href: "/" },
+    { label: "Orders", href: "/order_" },
+    { label: "Add Food", href: "/add" },
+    { label: "Dashboard", href: "/admin" },
+  ];
 
 export const categories = [
     { name: "Cakes", link: "/category/cake", image: '/00.png' },

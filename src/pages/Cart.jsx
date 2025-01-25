@@ -56,7 +56,7 @@ const Cart = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container  mx-auto px-4 py-8 transition-all duration-300 ease-in-out">
       <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
 
       {Object.keys(cart).length === 0 ? (
