@@ -16,7 +16,7 @@ export const navLinks = [
 
 export const categories = [
     { name: "Cakes", link: "/category/cake", image: '/00.png' },
-    { name: "Dishes", link: "/category/dishes", image: '/dis.png' },
+    { name: "Dish", link: "/category/dish", image: '/dis.png' },
     { name: "Catered Cuisine ", link: "/category/cater", image: '/cater.png' },
     { name: "Frozen Items", link: "/category/frozen", image: '/froz.png' },
 ];

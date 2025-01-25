@@ -7,13 +7,17 @@ const CreateFood = () => {
     description: '',
     category: '',
     subCategory: '',
-    flavor: [{ flavorName: '', price: '' }],
-    weight: '',
+    flavor: [{ flavorName: 'Default', price: '' }],
+    weight: '1',
     addOns: [{ name: '', description: '', price: '' }],
     deliveryTimeInstruction: ''
   });
   const [images, setImages] = useState([]);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    foodId: null
+  });
 
   const showNotification = (message, type) => {
     setNotification({ show: true, message, type });
@@ -72,8 +76,8 @@ const CreateFood = () => {
       description: '',
       category: '',
       subCategory: '',
-      flavor: [{ flavorName: '', price: '' }],
-      weight: '',
+      flavor: [{ flavorName: 'Default', price: '' }],
+      weight: '1',
       addOns: [{ name: '', description: '', price: '' }],
       deliveryTimeInstruction: ''
     });
@@ -203,12 +207,11 @@ const CreateFood = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Weight (in Pounds) <span className="text-red-500">*</span>
+                Weight (in Pounds)
               </label>
               <input
                 type="number"
                 name="weight"
-                required
                 value={foodData.weight}
                 onChange={handleInputChange}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"
@@ -234,14 +237,13 @@ const CreateFood = () => {
           {/* Flavors Section */}
           <div className="border-t pt-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Flavors <span className="text-red-500">*</span>
+              Flavors <span className="text-red-500">*</span><small className='font'> (if not applicable, add a single flavor with the name 'Default')</small>
             </h3>
             <div className="space-y-4">
               {foodData.flavor.map((flavor, index) => (
                 <div key={index} className="flex flex-col sm:flex-row gap-4">
                   <input
                     type="text"
-                    required
                     placeholder="Flavor Name"
                     value={flavor.flavorName}
                     onChange={(e) => handleFlavorChange(index, 'flavorName', e.target.value)}
@@ -249,8 +251,8 @@ const CreateFood = () => {
                   />
                   <input
                     type="number"
-                    required
                     placeholder="Price"
+                    required
                     value={flavor.price}
                     onChange={(e) => handleFlavorChange(index, 'price', e.target.value)}
                     className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-[#de7f45] focus:outline-none focus:ring-1 focus:ring-[#de7f45]"

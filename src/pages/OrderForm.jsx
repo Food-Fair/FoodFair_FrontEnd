@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Car, MapPin, Edit2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 
 const OrderForm = () => {
@@ -14,6 +15,8 @@ const OrderForm = () => {
   const [newLocation, setNewLocation] = useState("");
   
   const [customerData, setCustomerData] = useState(null);
+
+  const navigate = useNavigate();
 
 
   const handleLocationUpdate = async () => {
@@ -174,6 +177,8 @@ const handleOrderSubmit = async () => {
     if (response.status === 200 || response.status === 201) {
       alert("Order placed successfully!");
       localStorage.removeItem('cart');
+      window.dispatchEvent(new Event('cartUpdated'));// Trigger storage event to update cart
+      navigate('/profile');
     }
   } catch (error) { if (error.response) {
 
@@ -269,24 +274,27 @@ const handleOrderSubmit = async () => {
         )}
       </div>
       <div className="mb-4">
-        <label className="block font-medium">Delivery Time:</label>
+        <label className="block font-medium">Delivery Time:<span className="text-red-500">*</span></label>
         <input
           type="datetime-local"
+          required
           value={deliveryTime}
           onChange={(e) => setDeliveryTime(e.target.value)} // This will handle the datetime input
           className="w-full p-2 border rounded-md"
         />
       </div>
       <div className="mb-4">
-        <label className="block font-medium">Payment Method:</label>
+        <label className="block font-medium">Payment Method:<span className="text-red-500">*</span></label>
         <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full p-2 border rounded-md">
           <option value="ON_CASH">ON_CASH</option>
           <option value="ONLINE">ONLINE</option>
         </select>
       </div>
       <div className="mb-4">
-        <label className="block font-medium">Special Requirements:</label>
-        <input type="text" value={specialRequirements} onChange={(e) => setSpecialRequirements(e.target.value)} className="w-full p-2 border rounded-md" />
+        <label className="block font-medium">Special Requirements:<span className="text-red-500">*</span></label>
+        <input type="text"
+        required
+         value={specialRequirements} onChange={(e) => setSpecialRequirements(e.target.value)} className="w-full p-2 border rounded-md" />
       </div>
       <button onClick={handleOrderSubmit} className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-300">
         Place Order

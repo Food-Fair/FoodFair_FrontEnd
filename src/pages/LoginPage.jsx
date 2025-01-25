@@ -94,8 +94,6 @@ const LoginPage = () => {
 
         if (loginResponse.status === 200) {
           const token = loginResponse.data.access_token;
-          localStorage.setItem('access_token', token);
-          const userInfo = UserService.setUserTypeFromToken();
 
           try {
             await axios.post(
@@ -124,7 +122,7 @@ const LoginPage = () => {
             setIsRegister(false);
 
             setTimeout(() => {
-              const redirectPath = checkAndRedirect();
+              navigate('/login');
               navigate(redirectPath);
             }, 1500);
           } catch (profileError) {

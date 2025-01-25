@@ -8,18 +8,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Star, StarHalf } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { set } from "react-hook-form";
 export default function FoodDetail() {
   const { id } = useParams();
   const [foodItem, setFoodItem] = useState(null);
   const [addOns, setAddOns] = useState([]);
-  const [flavor, setFlavor] = useState("vanilla");
+  const [flavor, setFlavor] = useState("");
   const [review, setReview] = useState("");
   const [loading, setLoading] = useState(false);
   const[flavorIx,setFlavorIx]=useState(0);
   const [error, setError] = useState("");
   const [price, setPrice] = useState(0);
-  const [weight, setWeight] = useState(null); // Initialize as null
+  const [weight, setWeight] = useState(1); // Initialize as null
   const [quantity, setQuantity] = useState(1); // Add quantity state
+
+  const [notification, setNotification] = useState({ 
+    show: false, 
+    message: '', 
+    type: '' 
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    const type = localStorage.getItem('user_type');
+    setIsLoggedIn(!!token);
+    setUserType(type);
+  }, []);
+
+  const showNotification = (message, type) => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
 
   
 const [userDetails, setUserDetails] = useState({});
@@ -118,10 +142,14 @@ const handleSubmitReview = async () => {
         setLoading(true);
         const response = await axios.get(`http://localhost:8080/foods/${id}`);
         setFoodItem(response.data);
-        setPrice(response.data.basePrice);
-        setWeight(response.data.weight);
+        setPrice(response.data.basePrice);// Set weight with null check
+        setWeight(response.data.weight || 1); // If weight is null/undefined, default to 1
+        console.log("Food item  wwww:", weight);
+        console.log("Food item  wwww:", response.data.flavor[0].flavorName);
+        setFlavor(response.data.flavor[0].flavorName);
         
       } catch (err) {
+        console.error("Error fetching food item:", err);
         setError("Failed to load food details. Please try again later.");
       } finally {
         setLoading(false);
@@ -155,50 +183,68 @@ const handleSubmitReview = async () => {
 
   console.log(id)
   const handleAddToCart = () => {
-    if (!weight) {
-      alert("Please select a weight");
+    // Check authentication
+    if (!isLoggedIn) {
+      showNotification('Please login to add items to cart', 'error');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
       return;
     }
-
+  
+    // Check if user is admin
+    if (userType === 'admin') {
+      showNotification('Administrators cannot add items to cart', 'error');
+      return;
+    }
+  
+    // Validate selections
+    if (foodItem.category==='cake' & !weight) {
+      showNotification('Please select a weight', 'error');
+      return;
+    }
+  
     if (!flavor) {
-      alert("Please select a flavor");
+      showNotification('Please select a flavor', 'error');
       return;
     }
-
-    console.log("Adding to cart with weight:", foodItem.weight);
-
-    const cartItem = {
-      id: id,
-      name: foodItem.name,
-      imageUrl: foodItem.images && foodItem.images.length > 0
-        ? `http://localhost:8080/foods/image/${foodItem.images[0]}`
-        : "/placeholder-image.jpg",
-      flavor,
-      weight: parseFloat(foodItem.weight), // Ensure weight is a number
-      addOns,
-      price: parseFloat(price),
-      quantity: 1,
-      totalPrice: parseFloat(price)
-    };
-
-    console.log("Cart item being added:", cartItem);
-
-    const cart = JSON.parse(localStorage.getItem("cart")) || {};
-    const itemKey = `${cartItem.id}_${cartItem.flavor}_${cartItem.weight}`; // Include weight in key
-
-    if (cart[itemKey]) {
-      cart[itemKey].quantity += 1;
-      cart[itemKey].totalPrice = cart[itemKey].price * cart[itemKey].quantity;
-    } else {
-      cart[itemKey] = cartItem;
+  
+    try {
+      const cartItem = {
+        id: id,
+        name: foodItem.name,
+        imageUrl: foodItem.images && foodItem.images.length > 0
+          ? `http://localhost:8080/foods/image/${foodItem.images[0]}`
+          : "/placeholder-image.jpg",
+        flavor,
+        weight: parseFloat(foodItem.weight),
+        addOns,
+        price: parseFloat(price),
+        quantity: 1,
+        totalPrice: parseFloat(price)
+      };
+  
+      const cart = JSON.parse(localStorage.getItem("cart")) || {};
+      const itemKey = `${cartItem.id}_${cartItem.flavor}_${cartItem.weight}`;
+  
+      if (cart[itemKey]) {
+        cart[itemKey].quantity += 1;
+        cart[itemKey].totalPrice = cart[itemKey].price * cart[itemKey].quantity;
+      } else {
+        cart[itemKey] = cartItem;
+      }
+  
+      localStorage.setItem("cart", JSON.stringify(cart));
+      window.dispatchEvent(new Event('cartUpdated'));
+  
+      showNotification(
+        `Added to cart:  ${foodItem.name}`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      showNotification('Failed to add item to cart', 'error');
     }
-
-    localStorage.setItem("cart", JSON.stringify(cart));
-    window.dispatchEvent(new Event('cartUpdated'));
-
-    alert(
-      `Added to cart: ${flavor} ${foodItem.name}, ${weight} pounds. Total Price: ${price} TK`
-    );
   };
 
 
@@ -413,7 +459,31 @@ const handleSubmitReview = async () => {
       )}
     </div>
   </CardContent>
-</Card>
-    </div>
+</Card> {notification.show && (
+      <div
+        className={`fixed bottom-6 h-[4rem] w-[20rem] mr-[10rem] right-4 px-6 py-4 rounded-lg text-black shadow-lg 
+          transform transition-all duration-500 ease-in-out 
+          border-2 ${notification.type === 'success' ? 'border-green-500' : 'border-red-500'}
+          bg-white`}
+      >
+        <div className="flex items-center h-full">
+          <span className="text-lg font-normal leading-tight">
+            {notification.message}
+          </span>
+          <div className="h-1 bg-gray-200 absolute bottom-0 left-0 right-0 rounded-b-lg">
+            <div
+              className={`h-full ${
+                notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+              } transition-all duration-3000 ease-linear rounded-b-lg`}
+              style={{
+                width: '100%',
+                animation: 'shrink 3s linear forwards'
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
   );
 }

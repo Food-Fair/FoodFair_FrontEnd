@@ -1,10 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 
 // Base URL for your API
 const BASE_URL = 'http://localhost:8080'; // Change this to your API URL
 
-// Image Component
+// DeleteConfirmationModal component
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+      <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete this food item? This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// FoodImage component
 const FoodImage = ({ imagePath }) => {
   const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -132,69 +164,97 @@ const FilterSection = ({ filters, onFilterChange, onSubmit }) => (
 );
 
 
-const FoodCard = ({ food, onClick }) => (
-  <div 
-    onClick={onClick}
-    className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200
-               overflow-hidden cursor-pointer border border-gray-100"
-  >
-    {food.images && food.images.length > 0 && (
-      <div className="relative aspect-w-16 aspect-h-9">
-        <FoodImage imagePath={food.images[0]} />
-        {food.images.length > 1 && (
-          <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
-            +{food.images.length - 1} more
-          </div>
-        )}
-      </div>
-    )}
-    
-    <div className="p-4">
-      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-500 transition-colors">
-        {food.name}
-      </h3>
-      <p className="mt-1 text-sm text-gray-600 line-clamp-2">{food.description}</p>
-      
-      <div className="mt-3 flex flex-wrap gap-2">
-        <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-          {food.category}
-        </span>
-        {food.subCategory && (
-          <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-            {food.subCategory}
-          </span>
-        )}
-      </div>
-
-      {food.flavor && food.flavor.length > 0 && (
-        <div className="mt-3">
-          <h4 className="text-xs font-semibold text-gray-700 mb-1">Available Flavors:</h4>
-          <div className="flex flex-wrap gap-2">
-            {food.flavor.slice(0, 2).map((flav, index) => (
-              <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md">
-                {flav.flavorName}
-              </span>
-            ))}
-            {food.flavor.length > 2 && (
-              <span className="px-2 py-1 text-xs text-gray-500">
-                +{food.flavor.length - 2} more
-              </span>
-            )}
-          </div>
+const FoodCard = ({ food, onClick, onDelete, onUpdate, isAdmin }) => {
+  return ( // Add this return statement
+    <div 
+      onClick={onClick}
+      className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200
+                 overflow-hidden cursor-pointer border border-gray-100"
+    >
+      {food.images && food.images.length > 0 && (
+        <div className="relative aspect-w-16 aspect-h-9">
+          <FoodImage imagePath={food.images[0]} />
+          {food.images.length > 1 && (
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
+              +{food.images.length - 1} more
+            </div>
+          )}
         </div>
       )}
-
-      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-        <div className="text-sm text-gray-600">
-          <span className="font-medium">{food.weight}g</span>
+      
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-500 transition-colors">
+          {food.name}
+        </h3>
+        <p className="mt-1 text-sm text-gray-600 line-clamp-2">{food.description}</p>
+        
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
+            {food.category}
+          </span>
+          {food.subCategory && (
+            <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+              {food.subCategory}
+            </span>
+          )}
         </div>
-        <button className="px-3 py-1 text-sm text-orange-500 hover:text-orange-600 font-medium">
-          View Details →
-        </button>
+
+        {food.flavor && food.flavor.length > 0 && (
+          <div className="mt-3">
+            <h4 className="text-xs font-semibold text-gray-700 mb-1">Available Flavors:</h4>
+            <div className="flex flex-wrap gap-2">
+              {food.flavor.slice(0, 2).map((flav, index) => (
+                <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md">
+                  {flav.flavorName}
+                </span>
+              ))}
+              {food.flavor.length > 2 && (
+                <span className="px-2 py-1 text-xs text-gray-500">
+                  +{food.flavor.length - 2} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            <span className="font-medium">{food.weight}g</span>
+          </div>
+          <button className="px-3 py-1 text-sm text-orange-500 hover:text-orange-600 font-medium">
+            View Details →
+          </button>
+        </div>
       </div>
+
+      {isAdmin && (
+        <div className="p-4 border-t border-gray-100 flex justify-end gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate(food.foodId);
+            }}
+            className="px-3 py-1 text-blue-500 hover:bg-blue-50 rounded transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(food.foodId);
+            }}
+            className="px-3 py-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
+
+
+
 
 const FoodDetailModal = ({ isOpen, onClose, foodId }) => {
   const [food, setFood] = useState(null);
@@ -417,6 +477,50 @@ const FoodDetailModal = ({ isOpen, onClose, foodId }) => {
 
 // Main FoodList Component
 const FoodList = () => {
+
+  const navigate = useNavigate();
+  
+  // Add these states at the top of your component
+  const [userType, setUserType] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    foodId: null
+  });
+
+  // Add useEffect to check user type when component mounts
+  useEffect(() => {
+    const type = localStorage.getItem('user_type');
+    setUserType(type);
+  }, []);
+
+  const handleDelete = async (foodId) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.delete(`${BASE_URL}/admin/foodsDelete/${foodId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setDeleteConfirmation({ isOpen: false, foodId: null });
+      fetchFoods(); // Refresh the list
+      showNotification('Food item deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting food:', error);
+      showNotification('Failed to delete food item', 'error');
+    }
+  };
+  
+  const showNotification = (message, type) => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: '' });
+    }, 3000);
+  };
+
+  const handleUpdate = (foodId) => {
+    navigate(`/admin/foods/edit/${foodId}`);
+  };
   const [foods, setFoods] = useState([]);
   const [filters, setFilters] = useState({
     name: '',
@@ -475,14 +579,14 @@ const FoodList = () => {
     fetchFoods();
   }, []);
 
-  return  (
+  return (
     <div className="max-container mx-auto px-4 py-8">
       <FilterSection 
         filters={filters}
         onFilterChange={handleFilterChange}
         onSubmit={handleSubmit}
       />
-
+  
       {loading ? (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
@@ -499,10 +603,13 @@ const FoodList = () => {
                 key={food.foodId}
                 food={food}
                 onClick={() => handleFoodClick(food.foodId)}
+                onDelete={() => setDeleteConfirmation({ isOpen: true, foodId: food.foodId })}
+                onUpdate={() => handleUpdate(food.foodId)}
+                isAdmin={userType === 'admin'}
               />
             ))}
           </div>
-
+  
           {foods.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500">No foods found matching your criteria</p>
@@ -510,12 +617,28 @@ const FoodList = () => {
           )}
         </>
       )}
-
+  
+      <DeleteConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, foodId: null })}
+        onConfirm={() => handleDelete(deleteConfirmation.foodId)}
+      />
+  
       <FoodDetailModal 
         isOpen={selectedFoodId !== null}
         onClose={() => setSelectedFoodId(null)}
         foodId={selectedFoodId}
       />
+  
+      {notification.show && (
+        <div
+          className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg text-white shadow-lg 
+            transform transition-all duration-500 ease-in-out 
+            ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}
+        >
+          {notification.message}
+        </div>
+      )}
     </div>
   );
 };

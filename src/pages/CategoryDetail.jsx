@@ -13,7 +13,7 @@ import {
 
 const subCategories = {
   cake: ["wedding", "birthday", "anniversary", "miscellaneous"],
-  dish: ["Italian", "Mexican", "Chinese", "Indian"],
+  dish: ["Rice Items", "Fast Food", "Chinese"],
   frozen: ["ice cream", "frozen yogurt", "popsicles"],
   catering: ["appetizers", "main course", "desserts", "beverages"],
 };
@@ -29,6 +29,7 @@ const CategoryDetail = () => {
   useEffect(() => {
     if (category_name && subCategories[category_name]) {
       setSelectedSubCategory(subCategories[category_name][0]);
+      console.log("Selected subcategory:", subCategories[category_name][0]);
     } else {
       setSelectedSubCategory("");
     }
@@ -41,7 +42,7 @@ const CategoryDetail = () => {
         setLoading(true);
         console.log("Fetching food items for:", selectedSubCategory+"xx");
         const response = await axios.get(
-          `http://localhost:8080/foods/filter?subCategory=${selectedSubCategory}`
+          `http://localhost:8080/foods/filter?subCategory=${selectedSubCategory}`,
         );
         console.log("Fetched food items:", response.data);
 
@@ -49,7 +50,7 @@ const CategoryDetail = () => {
         const updatedFoodItems = response.data.map((food) => ({
           ...food,
           imageUrl: food.images.length > 0
-            ? `http://localhost:8080/foods/image/${food.images[0]}`
+            ? `http://localhost:8080/foods/image/${food.images[0]}?token=${localStorage.getItem('access_token')}`
             : null
         }));
 
@@ -86,11 +87,12 @@ const CategoryDetail = () => {
       <SelectValue placeholder="Select a subcategory" />
     </SelectTrigger>
     <SelectContent className="bg-white border border-gray-300 shadow-lg rounded-md z-50">
+      {console.log(category_name+"xx")}
       {category_name && subCategories[category_name] ? (
         subCategories[category_name].map((subcategory) => (
           <SelectItem key={subcategory} value={subcategory}>
             {subcategory}
-            {console.log(subcategory+"xx")}
+            {console.log( "selected"+ subcategory+"xx")}
           </SelectItem>
         ))
       ) : (
